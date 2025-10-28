@@ -18,16 +18,52 @@
 The team met over Zoom chat initially starting October 24, 2025.
 
 We discussed the project and the goals of the project.
-**Dan** shared his idea for what we could create for our project.
-**Dan** set up the project with a Jira site to track the progress of the project.
-**Dan** added some initial items to the project board on Jira.
+
+- **Dan** shared his idea for what we could create for our project.
+- **Dan** set up the project with a Jira site to track the progress of the project.
+- **Dan** added some initial items to the project board on Jira.
 
 Chat has continued throughout the iteration.
 
-The team met again on October 26, 2025 via a Zoom call at ~19:00 as our customer
-meeting.
+The team met again on October 26, 2025, via a Zoom call at ~19:00 as our customer
+meeting. **Tuck** created an agenda for the meeting and shared it with the team.
 
-### Team Zoom Customer Meeting Minutes
+## Team Zoom Customer Meeting
+
+### Meeting Agenda
+
+1. Remind Tuck to turn on the AI summary so we don’t have to write it up and check to make sure that the zoom is recording. 
+2. **P1:** Team member scheduling constraints. 
+3. **P1:** Select product owner and scrum master for the week. 
+   - Scrum master responsibilities.
+     1. Submit the following to Canvas by Tuesday evening ?after class?.
+     2. Team name, member names, iteration 0, date
+     3. Meeting minutes 
+     4. One paragraph describing how/when the team met and communicated (scrum, Slack, pairs, etc.) 
+     5. List the names of any new user stories added to the backlog. I will cross-reference them on GH Project. 
+     6. One paragraph summarizing the main activity to be found on GitHub. I will cross-reference. 
+     7. Link to your GitHub repository. 
+     8. Does each team member have a copy of the "starter code"? 
+     9. Any concerns from the team?
+   - Product owner responsibilities:
+     1. Answer all story creator messages by Monday at ?7pm?.
+4. **P3:** Story actions x 4-6 - owner volunteer. 
+   - Owner responsibilities:
+     1. Create 2–3 stories x two owners by Monday, October 27 at midnight.
+     2. Make SMART stories
+     3. Add them to the Jira project.
+     4. Estimate points—they aren’t meaningful yet just so we can get to the next meeting but turn something in Tuesday.
+5. **P3:** get stories in Git. Need owner.
+6. **P4:** Mockups & storyboards — owner volunteer. 
+   - Owner responsibilities.
+     1. Create storyboards by Tuesday, October 28 at 5 pm.
+     2. Add them to the Jira or Git story it relates to.
+7. **P5:** App skeleton. Need owner. Due Monday by 6pm so stories can get added.
+8. **P4b:** architecture discussion.
+
+Stories note: I doubt these are going to be interesting or difficult—the first stories will need to be basic: add a user, login as user, find user, update user information, status endpoints.
+
+### Meeting Minutes
 
 These are the Zoom AI generated minutes from the meeting.
 
@@ -44,7 +80,7 @@ and **Erin** planning to work on the project after class on Monday afternoon.
 #### Next steps
 
 - **Tuck**: Ping **Dan** about adding **Erin** to the Jira board
-- **Tuck**: Confirm with **Dan** that he will be Product Owner for this week
+- **Tuck**: Confirm with **Dan** that he will be the Product Owner for this week
 - **Erin**: Create the first three user stories by midnight tomorrow
 - **Christian**: Create the next two user stories by midnight tomorrow
 - **Erin**: Look into connecting Jira and Git and make that happen once she gets access to
@@ -58,14 +94,6 @@ and **Erin** planning to work on the project after class on Monday afternoon.
   Tuesday night
 
 #### Summary
-
-##### Meeting Setup and Introductions
-
-**Christian** and **Tuck** discussed the setup of a meeting, including the use of AI for
-summarization and the handling of video calls. **Christian** offered to assist **Erin** with
-joining the call, and **Erin** joined the meeting, apologizing for the delay. The conversation
-primarily focused on technical setup and introductions, with no significant decisions or
-action items mentioned.
 
 ##### Shared Grocery List Website Planning
 
@@ -116,13 +144,12 @@ possible.
 ##### Project Planning and Development Strategy
 
 The team discussed their approach to the project, focusing on creating a storyboard and
-app skeleton. **Erin** agreed to develop her stories and share them with the group for review
-before creating the storyboard. **Tuck** suggested using a Spring template as the basis for
+app skeleton. **Tuck** suggested using a Spring template as the basis for
 their app skeleton, noting that **Dan** has expertise in Spring and the team has experience
 with it from previous homework assignments. The team agreed to use the template, modify
 the database layer, and share the repository among the four of them. **Tuck** emphasized that
-their initial submission on Tuesday doesn't need to be perfect but should demonstrate
-their effort and direction.
+their initial submission on Tuesday hasn't set their course in stone since **Dan** 
+was busy and couldn't meet but should demonstrate their effort and direction.
 
 ##### Project Template Setup Discussion
 
