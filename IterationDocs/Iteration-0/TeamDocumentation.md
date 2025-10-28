@@ -15,20 +15,17 @@
 
 ## Team Meeting/Communications Details
 
-The team met over Zoom chat initially starting October 24, 2025.
-
+The team met over Zoom chat initially starting October 24, 2025. 
 We discussed the project and the goals of the project.
+Chat has continued throughout the iteration.
+The team met again on October 26, 2025, via a Zoom call at ~19:00 as our customer meeting. 
 
 - **Dan** shared his idea for what we could create for our project.
 - **Dan** set up the project with a Jira site to track the progress of the project.
 - **Dan** added some initial items to the project board on Jira.
+- **Tuck** created an agenda for the meeting and shared it with the team.
 
-Chat has continued throughout the iteration.
-
-The team met again on October 26, 2025, via a Zoom call at ~19:00 as our customer
-meeting. **Tuck** created an agenda for the meeting and shared it with the team.
-
-## Team Zoom Customer Meeting
+## Team Zoom Meeting - October 26, 2025
 
 ### Meeting Agenda
 
@@ -166,3 +163,17 @@ The team discussed their professional backgrounds, with **Erin** sharing her 16+
 experience and **Tuck** detailing his extensive work in embedded development, kernel work, and
 hardware engineering. They discovered they had previously worked at the same companies and
 knew mutual contacts, creating a connection between them. 
+
+## Team Customer Meeting—October 28, 2025
+
+Met with the customer (Dr. Ravan) on October 28, 2025 in class.
+
+- Made the switch to Git Project from Jira.
+- Made the decision to make Tuesday class time for weekly review.
+- Made the decision to use a Wednesday at 5pm Zoom meeting for all members that can make it 
+  to plan current week sprint.
+- Made the decision to use M, R, F 5pm by zoom/phone call to do daily standup.
+- Began migration of existing stories from Jira to Git Project. 
+- **Erin** volunteered to complete the migration of stories by the Wednesday sprint 
+  meeting.
+- **Dan** and **Christian** got **Christian** setup with the project.
