@@ -13,6 +13,20 @@
 + Erin McCall
 + Tuck Williamson
 
+# Required Information:
+ - [Minutes from meeting(s) with customer](#team-customer-meetingoctober-28-2025)
+ - [1 paragraph describing how/when the team met and communicated (scrum, Slack, pairs, 
+   etc.)](#team-meetingcommunications-details)
+ - [List the names of any new user stories added to the backlog. I will cross-reference 
+   them on GH Project.](#team-story-names-added)
+ - 1 paragraph summarizing the main activity to be found on GitHub. I will 
+   cross-reference.: This document and the project board were the only additions. 
+   Sprint this week will start adding code.
+ - [Link to your Github repository.](https://github.com/Tuck-Williamson/Mutual-Inclusion-csci-602-fall-2025-group-project)
+ - Does each team member have a copy of the "starter code"? : **YES**
+ - Any concerns from the team? **NO**
+
+
 ## Team Meeting/Communications Details
 
 The team met over Zoom chat initially starting October 24, 2025. 
@@ -24,6 +38,14 @@ The team met again on October 26, 2025, via a Zoom call at ~19:00 as our custome
 - **Dan** set up the project with a Jira site to track the progress of the project.
 - **Dan** added some initial items to the project board on Jira.
 - **Tuck** created an agenda for the meeting and shared it with the team.
+
+## Team Story Names Added
+
+- Add a user
+- Login as a user
+- Find user
+- Update user information
+- Status endpoints
 
 ## Team Zoom Meeting - October 26, 2025
 
