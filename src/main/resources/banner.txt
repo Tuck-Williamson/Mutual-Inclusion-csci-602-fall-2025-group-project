@@ -1,6 +1,11 @@
-${Ansi.GREEN}  ______      _______.  ______  __        __     ___    ___
-${Ansi.GREEN} /      |    /       | /      ||  |      / /    / _ \  |__ \
-${Ansi.GREEN}|  ,----'   |   (----`|  ,----'|  |     / /_   | | | |    ) |
-${Ansi.GREEN}|  |         \   \    |  |     |  |    | '_ \  | | | |   / /
-${Ansi.GREEN}|  `----..----)   |   |  `----.|  |    | (_) | | |_| |  / /_
-${Ansi.GREEN} \______||_______/     \______||__|     \___/   \___/  |____|
+${Ansi.MAGENTA}  __  __       _     ___             CSCI-602 Fall 2025
+${Ansi.MAGENTA} |  \/  |_   _| |_  |_ _|_ __   ___  Christian
+${Ansi.MAGENTA} | |\/| | | | | __|  | || '_ \ / __|     Dan
+${Ansi.MAGENTA} | |  | | |_| | |_   | || | | | (__          Erin
+${Ansi.MAGENTA} |_|  |_|\__,_|\__| |___|_| |_|\___|             Tuck
+
+${AnsiColor.BRIGHT_GREEN}${AnsiStyle.BOLD}${AnsiBackground.BLACK} ~~~~~~~~~~~~~~~~~~~~ HELPFUL LINKS ~~~~~~~~~~~~~~~~~~~~
+${AnsiStyle.NORMAL}${AnsiBackground.DEFAULT}
+${AnsiColor.BLUE}http://localhost:${server.port}/info
+${AnsiColor.BLUE}http://localhost:${server.port}/h2-console
+${AnsiColor.BLUE}http://localhost:${server.port}/swagger-ui/index.html

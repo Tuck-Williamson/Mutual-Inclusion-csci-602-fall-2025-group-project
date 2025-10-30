@@ -1,7 +1,7 @@
 info:
   app:
-    description: Template Spring Boot API for use of CSCI 602
-    name: csci-602
+    description: The CSCI 602 project from team MutInk
+    name: MutInc
     version: 1.0.0
 management:
   endpoint:
