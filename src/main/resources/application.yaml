@@ -17,12 +17,26 @@ management:
 server:
   port: 5001
 spring:
+  ## Allows you to go to ${BASE_URL}/h2-console to inspect db
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
   application:
-    name: csci-602
+    name: mut-inc
   datasource:
-    password: {password}
-    url: jdbc:postgresql://ccba8a0vn4fb2p.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com:5432/{database}
-    username: {username}
+    url: jdbc:h2:mem:mvpdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
   mvc:
     servlet:
       load-on-startup: 1

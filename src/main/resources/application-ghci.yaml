@@ -30,3 +30,5 @@ springdoc:
   packagesToScan: edu.citadel.api
   pathsToMatch: /v1, /**
   show-actuator: true
+
+# TODO: REMOVE REDUNDANT CONFIGURATIONS FROM THIS FILE
