@@ -32,3 +32,5 @@ springdoc:
   packagesToScan: edu.citadel.api
   pathsToMatch: /v1, /**
   show-actuator: true
+
+# TODO: REMOVE redundant configurations from this file
