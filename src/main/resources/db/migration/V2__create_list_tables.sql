@@ -12,5 +12,5 @@ CREATE TABLE list_item
     list_id BIGINT NOT NULL,
     list_item_name VARCHAR(50) NOT NULL DEFAULT 'New List Item',
     list_item_desc VARCHAR(255) NULL,
-    foreign key (list_id) REFERENCES list (list_id)
+    foreign key (list_id) REFERENCES list (list_id) ON DELETE CASCADE
 );
