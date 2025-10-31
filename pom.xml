@@ -13,8 +13,8 @@
     <artifactId>csci-602</artifactId>
     <version>1.0.0</version>
 
-    <name>csci-602</name>
-    <description>Template repository for CSCI 602</description>
+    <name>MutInc</name>
+    <description>The CSCI 602 project from team MutInk</description>
 
     <properties>
         <java.version>17</java.version>

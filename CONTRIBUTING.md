@@ -1,3 +1,5 @@
+# This is a class project. Contributing is not supported at this time.
+
 # Contributing
 
 When contributing to this repository, please first discuss the change you wish to make via issue,
