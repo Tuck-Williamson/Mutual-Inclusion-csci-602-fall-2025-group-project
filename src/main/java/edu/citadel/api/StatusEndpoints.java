@@ -45,6 +45,11 @@ public class StatusEndpoints {
         info.put("description", applicationDescription);
         return objectWriter.writeValueAsString(info);
     }
+
+    @GetMapping("status")
+    public String status(){
+        return "Hello World";
+    }
 }
 
 
