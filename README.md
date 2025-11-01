@@ -52,6 +52,21 @@ following students:
     Or you can click the links when the banner pops up as the project starts (these will
     have the correct port - in case the above link gets stale).
 
+### API Endpoints
+
+The following endpoints are available once the API is running:
+
+| Endpoint | Method | Description | Example Response |
+|-----------|---------|--------------|------------------|
+| `/status` | GET | Returns a simple confirmation that the API is reachable. | `Hello World` |
+| `/health` | GET | Reports basic application health. | `{ "status": "ok" }` |
+| `/info` | GET | Provides application metadata including name, version, and description. | `{ "name": "Mutual Inclusion", "version": "1.0.0", "description": "CSCI 602 Group Project" }` |
+
+You can test them in your browser by entering the desired endpoint after the local host url:
+http://localhost:5001[endpoint].
+ex: http://localhost:5001/status
+
+
 ## Resources
 
 ### Spring Boot
