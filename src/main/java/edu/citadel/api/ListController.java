@@ -3,11 +3,10 @@ package edu.citadel.api;
 import edu.citadel.dal.ListEntityRepository;
 import edu.citadel.dal.model.ListEntity;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/list")
@@ -27,6 +26,25 @@ public class ListController {
         ListEntity list = new ListEntity();
 
         return ResponseEntity.ok(repository.save(list));
+    }
+
+    /**
+     * Retrieves a list by its ID
+     * @param listId The ID of the list to retrieve
+     * @return ResponseEntity containing the ListEntity if found, 404 if not found
+     */
+    @GetMapping(
+            value = "/{listId}",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<ListEntity> viewList(@PathVariable Long listId) {
+        try {
+            return repository.findById(listId)
+                    .map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
 }
