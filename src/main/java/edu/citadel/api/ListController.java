@@ -13,11 +13,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/list")
 public class ListController {
 
-    private final ListEntityRepository repository;
+    private final ListEntityRepository listEntityRepository;
 
     @Autowired
-    public ListController(final ListEntityRepository repository) {
-        this.repository = repository;
+    public ListController(final ListEntityRepository listEntityRepository) {
+        this.listEntityRepository = listEntityRepository;
     }
 
     @PostMapping(
@@ -26,7 +26,7 @@ public class ListController {
     public ResponseEntity<ListEntity> createList() {
         ListEntity list = new ListEntity();
 
-        return ResponseEntity.ok(repository.save(list));
+        return ResponseEntity.ok(listEntityRepository.save(list));
     }
 
 }
