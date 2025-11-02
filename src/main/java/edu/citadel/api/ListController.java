@@ -39,7 +39,7 @@ public class ListController {
     )
     public ResponseEntity<ListEntity> viewList(@PathVariable Long listId) {
         try {
-            return repository.findById(listId)
+            return listEntityRepository.findById(listId)
                     .map(ResponseEntity::ok)
                     .orElse(ResponseEntity.notFound().build());
         } catch (Exception e) {
