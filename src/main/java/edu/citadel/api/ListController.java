@@ -2,11 +2,14 @@ package edu.citadel.api;
 
 import edu.citadel.dal.ListEntityRepository;
 import edu.citadel.dal.model.ListEntity;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/list")
@@ -45,6 +48,15 @@ public class ListController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    @DeleteMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ListEntity> deleteList(@PathVariable Long id) {
+        return listEntityRepository.findById(id).map(list -> {
+            Hibernate.initialize(list.getListItems()); // initialize the list
+            listEntityRepository.delete(list);
+            return ResponseEntity.ok(list);
+        }).orElse(ResponseEntity.notFound().build());
     }
 
 }

@@ -52,5 +52,28 @@ public class RestApiApplicationTests {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.description").value(applicationDescription));
     }
 
+    @Test
+    public void testListDeleteNonExist() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.delete("/lists/2112"))
+               .andExpect(MockMvcResultMatchers.status().isNotFound());
+    }
+
+    @Test
+    public void testListDeleteExist() throws Exception {
+        String response = mockMvc.perform(MockMvcRequestBuilders.post("/list"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        // Extract the list ID from the response. No need to parse JSON, just grab from the JSON string directly.
+        int startIndex = response.indexOf("\"id\":") + 5;
+        int endIndex = response.indexOf(",", startIndex);
+        String listId = response.substring(startIndex, endIndex);
+
+        // TODO: Once we can set list properties in the post endpoint, test properties of the returned object.
+        mockMvc.perform(MockMvcRequestBuilders.delete("/list/" + listId))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+    }
 }
 
