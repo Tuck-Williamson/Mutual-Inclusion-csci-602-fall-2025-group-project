@@ -52,9 +52,9 @@ public class ListController {
 
     @DeleteMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ListEntity> deleteList(@PathVariable Long id) {
-        return repository.findById(id).map(list -> {
+        return listEntityRepository.findById(id).map(list -> {
             Hibernate.initialize(list.getListItems()); // initialize the list
-            repository.delete(list);
+            listEntityRepository.delete(list);
             return ResponseEntity.ok(list);
         }).orElse(ResponseEntity.notFound().build());
     }
