@@ -12,11 +12,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/list")
 public class ListController {
 
-    private final ListEntityRepository repository;
+    private final ListEntityRepository listEntityRepository;
 
     @Autowired
-    public ListController(final ListEntityRepository repository) {
-        this.repository = repository;
+    public ListController(final ListEntityRepository listEntityRepository) {
+        this.listEntityRepository = listEntityRepository;
     }
 
     @PostMapping(
@@ -25,7 +25,7 @@ public class ListController {
     public ResponseEntity<ListEntity> createList() {
         ListEntity list = new ListEntity();
 
-        return ResponseEntity.ok(repository.save(list));
+        return ResponseEntity.ok(listEntityRepository.save(list));
     }
 
     /**
@@ -39,7 +39,7 @@ public class ListController {
     )
     public ResponseEntity<ListEntity> viewList(@PathVariable Long listId) {
         try {
-            return repository.findById(listId)
+            return listEntityRepository.findById(listId)
                     .map(ResponseEntity::ok)
                     .orElse(ResponseEntity.notFound().build());
         } catch (Exception e) {
