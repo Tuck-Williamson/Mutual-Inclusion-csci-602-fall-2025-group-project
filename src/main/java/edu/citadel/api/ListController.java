@@ -4,6 +4,7 @@ import edu.citadel.dal.ListEntityRepository;
 import edu.citadel.dal.model.ListEntity;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,11 +15,11 @@ import java.util.Optional;
 @RequestMapping("/list")
 public class ListController {
 
-    private final ListEntityRepository repository;
+    private final ListEntityRepository listEntityRepository;
 
     @Autowired
-    public ListController(final ListEntityRepository repository) {
-        this.repository = repository;
+    public ListController(final ListEntityRepository listEntityRepository) {
+        this.listEntityRepository = listEntityRepository;
     }
 
     @PostMapping(
@@ -27,7 +28,26 @@ public class ListController {
     public ResponseEntity<ListEntity> createList() {
         ListEntity list = new ListEntity();
 
-        return ResponseEntity.ok(repository.save(list));
+        return ResponseEntity.ok(listEntityRepository.save(list));
+    }
+
+    /**
+     * Retrieves a list by its ID
+     * @param listId The ID of the list to retrieve
+     * @return ResponseEntity containing the ListEntity if found, 404 if not found
+     */
+    @GetMapping(
+            value = "/{listId}",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<ListEntity> viewList(@PathVariable Long listId) {
+        try {
+            return listEntityRepository.findById(listId)
+                    .map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @DeleteMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)

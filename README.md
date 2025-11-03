@@ -52,6 +52,21 @@ following students:
     Or you can click the links when the banner pops up as the project starts (these will
     have the correct port - in case the above link gets stale).
 
+### API Endpoints
+
+The following endpoints are available once the API is running:
+
+| Endpoint | Method | Description | Example Response |
+|-----------|---------|--------------|------------------|
+| `/status` | GET | Returns a simple confirmation that the API is reachable. | `Hello World` |
+| `/health` | GET | Reports basic application health. | `{ "status": "ok" }` |
+| `/info` | GET | Provides application metadata including name, version, and description. | `{ "name": "Mutual Inclusion", "version": "1.0.0", "description": "CSCI 602 Group Project" }` |
+
+You can test them in your browser by entering the desired endpoint after the local host url:
+http://localhost:5001[endpoint].
+ex: http://localhost:5001/status
+
+
 ## Resources
 
 ### Spring Boot
@@ -69,3 +84,31 @@ For further references with Maven's dependency management framework:
 - [Official Apache Maven documentation](https://maven.apache.org/guides/index.html)
 - [Apache Maven Getting Started](https://maven.apache.org/guides/getting-started/)
 
+
+### Unit Testing and Coverage With JaCoCo
+
+There are two main executions for JaCoCo in the `pom.xml` file:
+
+1. `prepare-agent` - This execution generates the `${project.build.directory}/jacoco.exec` file when tests are run.
+2. `report` - This execution generates the code coverage report in HTML format located at `${project.build.directory}/site/jacoco/index.html`.
+
+#### Viewing Code Coverage Using Intellij IDEA
+
+1. Run the tests in your project (note: as the testing phase precedes the packaging phase, this will still be generated using `mvn clean package` or `mvn clean install`).
+2.  Navigate to `Run` -> `Manage Coverage Reports...`
+
+![Navigation to "Manage Coverage Reports"](images/intellij-manage-coverage.png)
+
+3.  Click on `+` to add a new coverage report
+
+![Choose Coverage Suite By Pressing `+`](images/choose-coverage.png)
+
+4. Select the `jacoco.exec` file located at `$PROJECT_ROOT/target/jacoco.exec`
+5. Click "Show Selected"
+6.  You should be able to see the coverage within the project explorer
+
+![Coverage within the Project Explorer](images/coverage-in-explorer.png)
+
+7.  Within the editor, you can see the coverage for each line of code (green = covered, red = not covered, yellow = partially covered)
+
+![Coverage View Within the Editor](images/coverage-in-editor.png)
