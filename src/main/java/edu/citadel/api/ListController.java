@@ -1,14 +1,16 @@
 package edu.citadel.api;
 
+import edu.citadel.api.request.ListItemRequestBody;
 import edu.citadel.dal.ListEntityRepository;
+import edu.citadel.dal.ListItemEntityRepository;
 import edu.citadel.dal.model.ListEntity;
+import edu.citadel.dal.model.ListItemEntity;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.SQLDataException;
 import java.util.Optional;
 
 @RestController
@@ -17,9 +19,14 @@ public class ListController {
 
     private final ListEntityRepository listEntityRepository;
 
+    private final ListItemEntityRepository listItemEntityRepository;
+
     @Autowired
-    public ListController(final ListEntityRepository listEntityRepository) {
+    public ListController(
+            final ListEntityRepository listEntityRepository,
+            final ListItemEntityRepository listItemEntityRepository) {
         this.listEntityRepository = listEntityRepository;
+        this.listItemEntityRepository = listItemEntityRepository;
     }
 
     @PostMapping(
@@ -57,6 +64,83 @@ public class ListController {
             listEntityRepository.delete(list);
             return ResponseEntity.ok(list);
         }).orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping(
+            value = "/{listId}/item",
+            produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<ListItemEntity> addListItem(@PathVariable Long listId, @RequestBody(required = false) ListItemRequestBody listItem) {
+        Optional<ListEntity> optionalList = listEntityRepository.findById(listId);
+        return optionalList.map(listEntity -> {
+            ListItemEntity listItemEntity = new ListItemEntity();
+            listItemEntity.setList(listEntity);
+            Optional.ofNullable(listItem)
+                    .ifPresent(listItemRequest -> {
+                        Optional.ofNullable(
+                                listItemRequest.getListItemName()
+                        ).ifPresent(listItemEntity::setListItemName);
+                        Optional.ofNullable(
+                                listItemRequest.getListItemDescription()
+                        ).ifPresent(listItemEntity::setListItemDesc);
+            });
+            return listItemEntityRepository.save(listItemEntity);
+        }).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    }
+
+
+    @PatchMapping(
+            value = "/{listId}/item/{listItemId}",
+            produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<ListItemEntity> editListItem(
+            @PathVariable Long listId,
+            @PathVariable Long listItemId,
+            @RequestBody(required = false) ListItemRequestBody listItem) {
+        if (!listItemEntityRepository.existsListByIdAndListId(listItemId, listId)) {
+            return ResponseEntity.notFound().build();
+        }
+        if (listItem == null ||
+                (listItem.getListItemName() == null && listItem.getListItemDescription() == null)) {
+            return ResponseEntity
+                    .of(ProblemDetail.forStatusAndDetail(
+                            HttpStatus.BAD_REQUEST,
+                            "No fields to update were provided"))
+                    .build();
+        }
+        return listItemEntityRepository.findById(listItemId)
+                .map(listItemEntity -> {
+                    Optional.ofNullable(listItem.getListItemName())
+                            .ifPresent(listItemEntity::setListItemName);
+                    Optional.ofNullable(listItem.getListItemDescription())
+                            .ifPresent(listItemEntity::setListItemDesc);
+                    return ResponseEntity.ok(listItemEntityRepository.save(listItemEntity));
+                }).orElse(ResponseEntity.of(
+                        ProblemDetail.forStatusAndDetail(
+                                HttpStatus.INTERNAL_SERVER_ERROR,
+                                "Problem updating list item"
+                        )).build());
+    }
+
+    @DeleteMapping(
+            value = "/{listId}/item/{listItemId}",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<ListItemEntity> deleteListItem(@PathVariable Long listId, @PathVariable Long listItemId) {
+        if (!listItemEntityRepository.existsListByIdAndListId(listItemId, listId)) {
+            return ResponseEntity.notFound().build();
+        }
+        return listItemEntityRepository.findById(listItemId)
+                .map(listItemEntity -> {
+                    listItemEntityRepository.delete(listItemEntity);
+                    return ResponseEntity.ok(listItemEntity);
+                }).orElse(ResponseEntity.of(
+                        ProblemDetail.forStatusAndDetail(
+                                HttpStatus.INTERNAL_SERVER_ERROR,
+                                "Problem deleting list item"
+                        )).build());
     }
 
 }
