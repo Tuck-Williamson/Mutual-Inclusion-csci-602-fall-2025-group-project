@@ -98,7 +98,7 @@ public class ListController {
     public ResponseEntity<ListItemEntity> editListItem(
             @PathVariable Long listId,
             @PathVariable Long listItemId,
-            @RequestBody ListItemRequestBody listItem) {
+            @RequestBody(required = false) ListItemRequestBody listItem) {
         if (!listItemEntityRepository.existsListByIdAndListId(listItemId, listId)) {
             return ResponseEntity.notFound().build();
         }
