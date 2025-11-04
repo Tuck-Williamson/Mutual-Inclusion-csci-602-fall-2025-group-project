@@ -5,6 +5,7 @@ import edu.citadel.dal.ListEntityRepository;
 import edu.citadel.dal.ListItemEntityRepository;
 import edu.citadel.dal.model.ListEntity;
 import edu.citadel.dal.model.ListItemEntity;
+import lombok.Data;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -73,7 +74,7 @@ public class ListController {
     public ResponseEntity<ListEntity> editList(@PathVariable Long listId,
                                                @RequestBody UpdateListRequest request) {
         try {
-            return repository.findById(listId)
+            return this.listEntityRepository.findById(listId)
                     .map(existingList -> {
                         // Update title if provided
                         if (request.getTitle() != null && !request.getTitle().trim().isEmpty()) {
@@ -88,7 +89,7 @@ public class ListController {
                             existingList.setCompletedOn(request.getCompletedOn());
                         }
 
-                        ListEntity updatedList = repository.save(existingList);
+                        ListEntity updatedList = this.listEntityRepository.save(existingList);
                         return ResponseEntity.ok(updatedList);
                     })
                     .orElse(ResponseEntity.notFound().build());
@@ -100,25 +101,13 @@ public class ListController {
     /**
      * Inner class for the update list request body
      */
+    @Data
     public static class UpdateListRequest {
         private String title;
         private java.time.Instant completedOn;
+    }
 
-        public String getTitle() {
-            return title;
-        }
 
-        public void setTitle(String title) {
-            this.title = title;
-        }
-
-        public java.time.Instant getCompletedOn() {
-            return completedOn;
-        }
-
-        public void setCompletedOn(java.time.Instant completedOn) {
-            this.completedOn = completedOn;
-        }
     @DeleteMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ListEntity> deleteList(@PathVariable Long id) {
         return listEntityRepository.findById(id).map(list -> {
