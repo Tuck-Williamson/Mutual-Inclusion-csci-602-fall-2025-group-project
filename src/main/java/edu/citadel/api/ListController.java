@@ -5,10 +5,13 @@ import edu.citadel.dal.ListEntityRepository;
 import edu.citadel.dal.ListItemEntityRepository;
 import edu.citadel.dal.model.ListEntity;
 import edu.citadel.dal.model.ListItemEntity;
+import lombok.Data;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.sql.SQLDataException;
 import java.util.Optional;
@@ -56,6 +59,54 @@ public class ListController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+    /**
+     * Updates an existing list's title
+     * @param listId The ID of the list to update
+     * @param request UpdateListRequest containing the new title
+     * @return ResponseEntity containing the updated ListEntity if found, 404 if not found
+     */
+    @PutMapping(
+            value = "/{listId}",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<ListEntity> editList(@PathVariable Long listId,
+                                               @RequestBody UpdateListRequest request) {
+        try {
+            return this.listEntityRepository.findById(listId)
+                    .map(existingList -> {
+                        // Update title if provided
+                        if (request.getTitle() != null && !request.getTitle().trim().isEmpty()) {
+                            if (request.getTitle().length() > 50) {
+                                return ResponseEntity.badRequest().<ListEntity>build();
+                            }
+                            existingList.setTitle(request.getTitle().trim());
+                        }
+
+                        // Update completed_on if provided
+                        if (request.getCompletedOn() != null) {
+                            existingList.setCompletedOn(request.getCompletedOn());
+                        }
+
+                        ListEntity updatedList = this.listEntityRepository.save(existingList);
+                        return ResponseEntity.ok(updatedList);
+                    })
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Inner class for the update list request body
+     */
+    @Data
+    public static class UpdateListRequest {
+        private String title;
+        private java.time.Instant completedOn;
+    }
+
 
     @DeleteMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ListEntity> deleteList(@PathVariable Long id) {
