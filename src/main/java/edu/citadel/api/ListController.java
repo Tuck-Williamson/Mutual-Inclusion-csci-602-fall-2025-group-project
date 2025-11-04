@@ -1,7 +1,10 @@
 package edu.citadel.api;
 
+import edu.citadel.api.request.ListItemRequestBody;
 import edu.citadel.dal.ListEntityRepository;
+import edu.citadel.dal.ListItemEntityRepository;
 import edu.citadel.dal.model.ListEntity;
+import edu.citadel.dal.model.ListItemEntity;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,9 +20,14 @@ public class ListController {
 
     private final ListEntityRepository listEntityRepository;
 
+    private final ListItemEntityRepository listItemEntityRepository;
+
     @Autowired
-    public ListController(final ListEntityRepository listEntityRepository) {
+    public ListController(
+            final ListEntityRepository listEntityRepository,
+            final ListItemEntityRepository listItemEntityRepository) {
         this.listEntityRepository = listEntityRepository;
+        this.listItemEntityRepository = listItemEntityRepository;
     }
 
     @PostMapping(
@@ -59,4 +67,26 @@ public class ListController {
         }).orElse(ResponseEntity.notFound().build());
     }
 
+    @PostMapping(
+            value = "/{listId}/item",
+            produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<ListItemEntity> addListItem(@PathVariable Long listId, @RequestBody(required = false) ListItemRequestBody listItem) {
+        Optional<ListEntity> optionalList = listEntityRepository.findById(listId);
+        return optionalList.map(listEntity -> {
+            ListItemEntity listItemEntity = new ListItemEntity();
+            listItemEntity.setList(listEntity);
+            Optional.ofNullable(listItem)
+                    .ifPresent(listItemRequest -> {
+                        Optional.ofNullable(
+                                listItemRequest.getListItemName()
+                        ).ifPresent(listItemEntity::setListItemName);
+                        Optional.ofNullable(
+                                listItemRequest.getListItemDescription()
+                        ).ifPresent(listItemEntity::setListItemDesc);
+            });
+            return listItemEntityRepository.save(listItemEntity);
+        }).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    }
 }

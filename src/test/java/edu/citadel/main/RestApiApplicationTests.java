@@ -1,5 +1,6 @@
 package edu.citadel.main;
 
+import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -7,6 +8,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
@@ -74,6 +76,30 @@ public class RestApiApplicationTests {
         // TODO: Once we can set list properties in the post endpoint, test properties of the returned object.
         mockMvc.perform(MockMvcRequestBuilders.delete("/list/" + listId))
                 .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    @Test
+    public void testAddListItemToExistingList() throws Exception {
+        ResultActions postListResult = mockMvc.perform(MockMvcRequestBuilders.post("/list"))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+        // extract the list id from the response
+        Integer listId = JsonPath.read(postListResult.andReturn().getResponse().getContentAsString(), "$.id");
+
+
+        String listItemJson = """
+                {
+                    "listItemName": "Test Item",
+                    "listItemDescription": "This is a test item."
+                }
+                """;
+        mockMvc.perform(MockMvcRequestBuilders.post("/list/" + listId + "/item")
+                        .contentType("application/json")
+                        .content(listItemJson))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.listItemName").value("Test Item"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.listItemDesc").value("This is a test item."));
+
     }
 }
 
