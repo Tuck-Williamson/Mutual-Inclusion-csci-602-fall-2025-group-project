@@ -1,6 +1,7 @@
 package edu.citadel.main;
 
 import com.jayway.jsonpath.JsonPath;
+import edu.citadel.dal.ListItemEntityRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,6 +12,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -27,6 +30,9 @@ public class RestApiApplicationTests {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private ListItemEntityRepository listItemEntityRepository;
 
 	@Test
 	public void contextLoads() {}
@@ -101,5 +107,38 @@ public class RestApiApplicationTests {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.listItemDesc").value("This is a test item."));
 
     }
+
+    @Test
+    public void testUpdateListItem() throws Exception {
+        ResultActions postListResult = mockMvc.perform(MockMvcRequestBuilders.post("/list"))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Integer listId = JsonPath.read(postListResult.andReturn().getResponse().getContentAsString(), "$.id");
+
+        ResultActions addListItemResult = mockMvc.perform(MockMvcRequestBuilders.post("/list/" + listId + "/item")
+                        .contentType("application/json")
+                        .content("""
+                                {
+                                    "listItemName": "Associated Item",
+                                    "listItemDescription": "This item should be associated with the list."
+                                }
+                                """))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+        Integer listItemId = JsonPath.read(addListItemResult.andReturn().getResponse().getContentAsString(), "$.id");
+
+        // Now let's update the listItem and see if it verifies the association
+        String updateListItemJson = """
+                {
+                    "listItemName": "Updated Item Name"
+                }
+                """;
+        mockMvc.perform(MockMvcRequestBuilders.patch("/list/" + listId + "/item/" + listItemId)
+                        .contentType("application/json")
+                        .content(updateListItemJson))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.listItemName").value("Updated Item Name"))
+        .andExpect(MockMvcResultMatchers.jsonPath("$.listItemDesc").value("This item should be associated with the list."));
+    }
+
 }
 

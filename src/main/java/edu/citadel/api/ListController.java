@@ -7,11 +7,10 @@ import edu.citadel.dal.model.ListEntity;
 import edu.citadel.dal.model.ListItemEntity;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.SQLDataException;
 import java.util.Optional;
 
 @RestController
@@ -89,4 +88,40 @@ public class ListController {
             return listItemEntityRepository.save(listItemEntity);
         }).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
+
+
+    @PatchMapping(
+            value = "/{listId}/item/{listItemId}",
+            produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<ListItemEntity> editListItem(
+            @PathVariable Long listId,
+            @PathVariable Long listItemId,
+            @RequestBody ListItemRequestBody listItem) {
+        if (!listItemEntityRepository.existsListByIdAndListId(listItemId, listId)) {
+            return ResponseEntity.notFound().build();
+        }
+        if (listItem == null ||
+                (listItem.getListItemName() == null && listItem.getListItemDescription() == null)) {
+            return ResponseEntity
+                    .of(ProblemDetail.forStatusAndDetail(
+                            HttpStatus.BAD_REQUEST,
+                            "No fields to update were provided"))
+                    .build();
+        }
+        return listItemEntityRepository.findById(listItemId)
+                .map(listItemEntity -> {
+                    Optional.ofNullable(listItem.getListItemName())
+                            .ifPresent(listItemEntity::setListItemName);
+                    Optional.ofNullable(listItem.getListItemDescription())
+                            .ifPresent(listItemEntity::setListItemDesc);
+                    return ResponseEntity.ok(listItemEntityRepository.save(listItemEntity));
+                }).orElse(ResponseEntity.of(
+                        ProblemDetail.forStatusAndDetail(
+                                HttpStatus.INTERNAL_SERVER_ERROR,
+                                "Problem updating list item"
+                        )).build());
+    }
+
 }
