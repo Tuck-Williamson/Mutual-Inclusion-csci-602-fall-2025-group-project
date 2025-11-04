@@ -124,4 +124,23 @@ public class ListController {
                         )).build());
     }
 
+    @DeleteMapping(
+            value = "/{listId}/item/{listItemId}",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<ListItemEntity> deleteListItem(@PathVariable Long listId, @PathVariable Long listItemId) {
+        if (!listItemEntityRepository.existsListByIdAndListId(listItemId, listId)) {
+            return ResponseEntity.notFound().build();
+        }
+        return listItemEntityRepository.findById(listItemId)
+                .map(listItemEntity -> {
+                    listItemEntityRepository.delete(listItemEntity);
+                    return ResponseEntity.ok(listItemEntity);
+                }).orElse(ResponseEntity.of(
+                        ProblemDetail.forStatusAndDetail(
+                                HttpStatus.INTERNAL_SERVER_ERROR,
+                                "Problem deleting list item"
+                        )).build());
+    }
+
 }

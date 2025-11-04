@@ -140,5 +140,33 @@ public class RestApiApplicationTests {
         .andExpect(MockMvcResultMatchers.jsonPath("$.listItemDesc").value("This item should be associated with the list."));
     }
 
+
+    @Test
+    public void testDeleteListItem() throws Exception {
+        ResultActions postListResult = mockMvc.perform(MockMvcRequestBuilders.post("/list"))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Integer listId = JsonPath.read(postListResult.andReturn().getResponse().getContentAsString(), "$.id");
+
+        ResultActions addListItemResult = mockMvc.perform(MockMvcRequestBuilders.post("/list/" + listId + "/item")
+                        .contentType("application/json")
+                        .content("""
+                                {
+                                    "listItemName": "Item to be deleted",
+                                    "listItemDescription": "This item will be deleted in the test."
+                                }
+                                """))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+        Integer listItemId = JsonPath.read(addListItemResult.andReturn().getResponse().getContentAsString(), "$.id");
+
+        // Now let's delete the listItem
+        mockMvc.perform(MockMvcRequestBuilders.delete("/list/" + listId + "/item/" + listItemId))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+        // Verify that the list item has been deleted from the repository
+        assertTrue(listItemEntityRepository.findById(Long.valueOf(listItemId)).isEmpty());
+    }
+
+
 }
 
