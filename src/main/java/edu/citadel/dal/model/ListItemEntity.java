@@ -1,11 +1,13 @@
 package edu.citadel.dal.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -20,6 +22,7 @@ public class ListItemEntity {
     private Long id;
 
     @NotNull
+    @JsonBackReference
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "LIST_ID", nullable = false)
@@ -29,7 +32,7 @@ public class ListItemEntity {
     @NotNull
     @ColumnDefault("'New List Item'")
     @Column(name = "LIST_ITEM_NAME", nullable = false, length = 50)
-    private String listItemName;
+    private String listItemName = "New List Item";
 
     @Size(max = 255)
     @Column(name = "LIST_ITEM_DESC")
