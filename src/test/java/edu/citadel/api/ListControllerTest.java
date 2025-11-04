@@ -1,0 +1,81 @@
+package edu.citadel.api;
+
+import edu.citadel.api.request.ListItemRequestBody;
+import edu.citadel.dal.ListEntityRepository;
+import edu.citadel.dal.ListItemEntityRepository;
+import edu.citadel.dal.model.ListEntity;
+import edu.citadel.dal.model.ListItemEntity;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.ResponseEntity;
+
+import java.sql.Timestamp;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class ListControllerTest {
+
+    @Mock
+    private ListEntityRepository mockListEntityRepository; // Mocked dependency
+
+    @Mock
+    private ListItemEntityRepository mockListItemEntityRepository;
+
+
+    private ListController instance;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+        instance = new ListController(mockListEntityRepository, mockListItemEntityRepository);
+    }
+
+    @Test
+    void createList_HappyPath() {
+        Timestamp mockedTimestamp = Timestamp.valueOf("1234-01-01 00:00:00");
+        Mockito.when(mockListEntityRepository.save(Mockito.any(ListEntity.class)))
+                .thenAnswer(invocation -> {
+                    ListEntity arg = invocation.getArgument(0);
+                    arg.setId(1L); // Simulate setting an ID upon saving
+                    arg.setCreatedOn(mockedTimestamp); // Set the mocked timestamp
+                    return arg;
+                });
+        ListEntity result = instance.createList().getBody();
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
+        assertEquals("New List", result.getTitle());
+        assertEquals(mockedTimestamp, result.getCreatedOn());
+        assertNull(result.getCompletedOn());
+        assertNotNull(result.getListItems());
+        assertTrue(result.getListItems().isEmpty());
+    }
+
+    @Test
+    void createListItem_HappyPath() {
+        Timestamp mockedTimestamp = Timestamp.valueOf("1234-01-01 00:00:00");
+        Mockito.when(mockListEntityRepository.findById(Mockito.any(Long.class)))
+                .thenAnswer(invocation -> {
+                  Long arg = invocation.getArgument(0);
+                    ListEntity listEntity = new ListEntity();
+                    listEntity.setId(arg); // Simulate setting an ID upon saving
+                    listEntity.setCreatedOn(mockedTimestamp); // Set the mocked timestamp
+                    return Optional.of(listEntity);
+                });
+        Mockito.when(mockListItemEntityRepository.save(Mockito.any(ListItemEntity.class)))
+                .thenAnswer(invocation -> {
+                    ListItemEntity arg = invocation.getArgument(0);
+                    arg.setId(1L); // Simulate setting an ID upon saving
+                    arg.setListItemName("New List Item");
+                    return arg;
+                });
+        ResponseEntity<ListItemEntity> result = instance.addListItem(1L, null);
+        assertNotNull(result.getBody());
+        assertEquals(1L, result.getBody().getId());
+        assertEquals("New List Item", result.getBody().getListItemName());
+        assertNull(result.getBody().getListItemDesc());
+    }
+}

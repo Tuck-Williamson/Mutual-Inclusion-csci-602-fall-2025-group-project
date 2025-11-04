@@ -141,6 +141,38 @@
                     <jvmArguments>-Xms2048m -Xmx4096m</jvmArguments>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.14</version>
+                <executions>
+                    <execution>
+                            <id>prepare-agent</id>
+                            <goals>
+                                <goal>prepare-agent</goal>
+                            </goals>
+                            <configuration>
+                                <destFile>${project.build.directory}/jacoco.exec</destFile>
+                                <append>false</append>
+                            </configuration>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <dataFile>${project.build.directory}/jacoco.exec</dataFile>
+                            <outputDirectory>${project.build.directory}/jacoco-report</outputDirectory>
+                            <formats>
+                                <format>HTML</format>
+                                <format>XML</format>
+                            </formats>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
