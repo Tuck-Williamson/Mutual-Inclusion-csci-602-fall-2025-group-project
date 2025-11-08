@@ -1,5 +1,6 @@
 package edu.citadel.api;
 
+import edu.citadel.api.request.CreateListRequest;
 import edu.citadel.api.request.ListItemRequestBody;
 import edu.citadel.dal.ListEntityRepository;
 import edu.citadel.dal.ListItemEntityRepository;
@@ -38,15 +39,13 @@ public class ListController {
             produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<ListEntity> createList(@RequestBody(required = false) Map<String, Object> body) {
+    public ResponseEntity<ListEntity> createList(@RequestBody(required = false) CreateListRequest body) {
         ListEntity list = new ListEntity();
 
-        if (body != null && body.containsKey("title")) {
-            String title = (String) body.get("title");
-            if (title != null && !title.isBlank()) {
-                list.setTitle(title);
-            }
+        if (body != null && body.getTitle() != null && !body.getTitle().isBlank()) {
+            list.setTitle(body.getTitle());
         }
+
         return ResponseEntity.ok(listEntityRepository.save(list));
     }
 

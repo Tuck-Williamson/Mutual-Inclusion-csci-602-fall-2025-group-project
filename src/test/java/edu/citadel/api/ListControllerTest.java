@@ -13,9 +13,9 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.ResponseEntity;
 
 import java.sql.Timestamp;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
+import edu.citadel.api.request.CreateListRequest;
+
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -68,9 +68,9 @@ class ListControllerTest {
                     return arg;
                 });
 
-        // Simulate a JSON body with a title
-        Map<String, Object> body = new HashMap<>();
-        body.put("title", "Weekend Tasks");
+        // ✅ Use the new DTO instead of a Map
+        CreateListRequest body = new CreateListRequest();
+        body.setTitle("Weekend Tasks");
 
         ListEntity result = instance.createList(body).getBody();
 
@@ -82,6 +82,64 @@ class ListControllerTest {
         assertNotNull(result.getListItems());
         assertTrue(result.getListItems().isEmpty());
     }
+
+
+    @Test
+    void createList_BodyWithoutTitle_UsesDefault() {
+        Timestamp mockedTimestamp = Timestamp.valueOf("2024-01-02 00:00:00");
+
+        Mockito.when(mockListEntityRepository.save(Mockito.any(ListEntity.class)))
+                .thenAnswer(invocation -> {
+                    ListEntity arg = invocation.getArgument(0);
+                    arg.setId(3L);
+                    arg.setCreatedOn(mockedTimestamp);
+                    return arg;
+                });
+
+        // ✅ Body with no title
+        CreateListRequest body = new CreateListRequest();
+
+        ListEntity result = instance.createList(body).getBody();
+
+        assertNotNull(result);
+        assertEquals(3L, result.getId());
+        assertEquals("New List", result.getTitle()); // Default
+        assertEquals(mockedTimestamp, result.getCreatedOn());
+        assertNull(result.getCompletedOn());
+        assertNotNull(result.getListItems());
+        assertTrue(result.getListItems().isEmpty());
+    }
+
+
+    @Test
+    void createList_BlankTitle_UsesDefault() {
+        Timestamp mockedTimestamp = Timestamp.valueOf("2024-01-04 00:00:00");
+
+        Mockito.when(mockListEntityRepository.save(Mockito.any(ListEntity.class)))
+                .thenAnswer(invocation -> {
+                    ListEntity arg = invocation.getArgument(0);
+                    arg.setId(4L);
+                    arg.setCreatedOn(mockedTimestamp);
+                    return arg;
+                });
+
+        // ✅ Body with blank title
+        CreateListRequest body = new CreateListRequest();
+        body.setTitle("   ");
+
+        ListEntity result = instance.createList(body).getBody();
+
+        assertNotNull(result);
+        assertEquals(4L, result.getId());
+        assertEquals("New List", result.getTitle()); // Default still applies
+        assertEquals(mockedTimestamp, result.getCreatedOn());
+        assertNull(result.getCompletedOn());
+        assertNotNull(result.getListItems());
+        assertTrue(result.getListItems().isEmpty());
+    }
+
+
+
 
 
     @Test
