@@ -167,6 +167,42 @@ public class RestApiApplicationTests {
         assertTrue(listItemEntityRepository.findById(Long.valueOf(listItemId)).isEmpty());
     }
 
+    @Test
+    public void testMarkListItemAsCompleted() throws Exception {
+        // Create a new list
+        ResultActions postListResult = mockMvc.perform(MockMvcRequestBuilders.post("/list"))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Integer listId = JsonPath.read(postListResult.andReturn().getResponse().getContentAsString(), "$.id");
+
+        // Add an item to that list
+        ResultActions addListItemResult = mockMvc.perform(MockMvcRequestBuilders.post("/list/" + listId + "/item")
+                        .contentType("application/json")
+                        .content("""
+                            {
+                                "listItemName": "Complete me",
+                                "listItemDescription": "This item will be marked complete."
+                            }
+                            """))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+        Integer listItemId = JsonPath.read(addListItemResult.andReturn().getResponse().getContentAsString(), "$.id");
+
+        // Mark the item as completed
+        mockMvc.perform(MockMvcRequestBuilders.patch("/list/" + listId + "/item/" + listItemId + "/complete")
+                        .param("completed", "true"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.completed").value(true))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.completedOn").exists());
+
+        // Optionally test marking it incomplete again
+        mockMvc.perform(MockMvcRequestBuilders.patch("/list/" + listId + "/item/" + listItemId + "/complete")
+                        .param("completed", "false"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.completed").value(false))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.completedOn").doesNotExist());
+    }
+
+
 
 }
 
