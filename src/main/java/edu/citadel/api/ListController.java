@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.sql.SQLDataException;
+import java.util.Map;
 import java.util.Optional;
 import java.time.LocalDateTime;
 
@@ -34,11 +35,18 @@ public class ListController {
     }
 
     @PostMapping(
-            produces = MediaType.APPLICATION_JSON_VALUE
+            produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<ListEntity> createList() {
+    public ResponseEntity<ListEntity> createList(@RequestBody(required = false) Map<String, Object> body) {
         ListEntity list = new ListEntity();
 
+        if (body != null && body.containsKey("title")) {
+            String title = (String) body.get("title");
+            if (title != null && !title.isBlank()) {
+                list.setTitle(title);
+            }
+        }
         return ResponseEntity.ok(listEntityRepository.save(list));
     }
 

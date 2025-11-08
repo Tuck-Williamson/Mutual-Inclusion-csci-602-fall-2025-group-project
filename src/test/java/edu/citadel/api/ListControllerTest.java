@@ -13,6 +13,8 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.ResponseEntity;
 
 import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -44,7 +46,7 @@ class ListControllerTest {
                     arg.setCreatedOn(mockedTimestamp); // Set the mocked timestamp
                     return arg;
                 });
-        ListEntity result = instance.createList().getBody();
+        ListEntity result = instance.createList(null).getBody();
         assertNotNull(result);
         assertEquals(1L, result.getId());
         assertEquals("New List", result.getTitle());
@@ -53,6 +55,34 @@ class ListControllerTest {
         assertNotNull(result.getListItems());
         assertTrue(result.getListItems().isEmpty());
     }
+
+    @Test
+    void createList_WithCustomTitle() {
+        Timestamp mockedTimestamp = Timestamp.valueOf("2024-01-01 00:00:00");
+
+        Mockito.when(mockListEntityRepository.save(Mockito.any(ListEntity.class)))
+                .thenAnswer(invocation -> {
+                    ListEntity arg = invocation.getArgument(0);
+                    arg.setId(2L);
+                    arg.setCreatedOn(mockedTimestamp);
+                    return arg;
+                });
+
+        // Simulate a JSON body with a title
+        Map<String, Object> body = new HashMap<>();
+        body.put("title", "Weekend Tasks");
+
+        ListEntity result = instance.createList(body).getBody();
+
+        assertNotNull(result);
+        assertEquals(2L, result.getId());
+        assertEquals("Weekend Tasks", result.getTitle());
+        assertEquals(mockedTimestamp, result.getCreatedOn());
+        assertNull(result.getCompletedOn());
+        assertNotNull(result.getListItems());
+        assertTrue(result.getListItems().isEmpty());
+    }
+
 
     @Test
     void createListItem_HappyPath() {
