@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.sql.SQLDataException;
 import java.util.Optional;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/list")
@@ -126,6 +127,7 @@ public class ListController {
         Optional<ListEntity> optionalList = listEntityRepository.findById(listId);
         return optionalList.map(listEntity -> {
             ListItemEntity listItemEntity = new ListItemEntity();
+            listItemEntity.setCompleted(false);
             listItemEntity.setList(listEntity);
             Optional.ofNullable(listItem)
                     .ifPresent(listItemRequest -> {
@@ -173,6 +175,29 @@ public class ListController {
                                 HttpStatus.INTERNAL_SERVER_ERROR,
                                 "Problem updating list item"
                         )).build());
+    }
+
+    @PatchMapping(
+            value = "/{listId}/item/{listItemId}/complete",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<ListItemEntity> markItemComplete(
+        @PathVariable Long listId,
+        @PathVariable Long listItemId,
+        @RequestParam boolean completed)
+    {
+        if(!listItemEntityRepository.existsListByIdAndListId(listItemId, listId)) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return listItemEntityRepository.findById(listItemId)
+                .map(listItemEntity -> {
+                    listItemEntity.setCompleted(completed);
+                    listItemEntity.setCompletedOn(completed ? LocalDateTime.now() : null);
+                    return ResponseEntity.ok(listItemEntityRepository.save(listItemEntity));
+                })
+                .orElse(ResponseEntity.internalServerError().build());
+
     }
 
     @DeleteMapping(

@@ -11,6 +11,8 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @Entity
@@ -37,6 +39,13 @@ public class ListItemEntity {
     @Size(max = 255)
     @Column(name = "LIST_ITEM_DESC")
     private String listItemDesc;
+
+    @NotNull
+    @Column(name = "COMPLETED", nullable = false)
+    private Boolean completed = false;
+
+    @Column(name = "COMPLETED_ON")
+    private LocalDateTime completedOn;
 
 
 }
