@@ -56,15 +56,15 @@ following students:
 
 The following endpoints are available once the API is running:
 
-| Endpoint | Method | Description | Example Response |
-|-----------|---------|--------------|------------------|
-| `/status` | GET | Returns a simple confirmation that the API is reachable. | `Hello World` |
-| `/health` | GET | Reports basic application health. | `{ "status": "ok" }` |
-| `/info` | GET | Provides application metadata including name, version, and description. | `{ "name": "Mutual Inclusion", "version": "1.0.0", "description": "CSCI 602 Group Project" }` |
+| Endpoint         | Method | Description | Example Response |
+|------------------|---------|--------------|------------------|
+| `/server/status` | GET | Returns a simple confirmation that the API is reachable. | `Hello World` |
+| `/server/health`        | GET | Reports basic application health. | `{ "status": "ok" }` |
+| `/server/info`          | GET | Provides application metadata including name, version, and description. | `{ "name": "Mutual Inclusion", "version": "1.0.0", "description": "CSCI 602 Group Project" }` |
 
 You can test them in your browser by entering the desired endpoint after the local host url:
 http://localhost:5001[endpoint].
-ex: http://localhost:5001/status
+ex: http://localhost:5001/server/status
 
 
 ## Resources
