@@ -35,7 +35,7 @@ spring:
     show-sql: true
   flyway:
     enabled: true
-    locations: classpath:db/migration
+    locations: classpath:db/migration/h2
     baseline-on-migrate: true
   mvc:
     servlet:
