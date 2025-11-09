@@ -39,21 +39,21 @@ public class RestApiApplicationTests {
 
     @Test
     public void testStatusEndpoint() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/status"))
+        mockMvc.perform(MockMvcRequestBuilders.get("/server/status"))
                .andExpect(MockMvcResultMatchers.status().isOk())
                .andExpect(MockMvcResultMatchers.content().string("Hello World"));
     }
 
     @Test
     public void testHealthEndpoint() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/health"))
+        mockMvc.perform(MockMvcRequestBuilders.get("/server/health"))
                .andExpect(MockMvcResultMatchers.status().isOk())
                .andExpect(MockMvcResultMatchers.jsonPath("$.status").value("ok"));
     }
 
     @Test
     public void testInfoEndpoint() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/info"))
+        mockMvc.perform(MockMvcRequestBuilders.get("/server/info"))
                 .andExpect(MockMvcResultMatchers.status().is(200))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(applicationName))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.version").value(applicationVersion))
