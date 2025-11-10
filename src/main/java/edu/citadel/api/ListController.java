@@ -1,5 +1,6 @@
 package edu.citadel.api;
 
+import edu.citadel.api.request.CreateListRequest;
 import edu.citadel.api.request.ListItemRequestBody;
 import edu.citadel.dal.ListEntityRepository;
 import edu.citadel.dal.ListItemEntityRepository;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.sql.SQLDataException;
+import java.util.Map;
 import java.util.Optional;
 import java.time.LocalDateTime;
 
@@ -34,10 +36,15 @@ public class ListController {
     }
 
     @PostMapping(
-            produces = MediaType.APPLICATION_JSON_VALUE
+            produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<ListEntity> createList() {
+    public ResponseEntity<ListEntity> createList(@RequestBody(required = false) CreateListRequest body) {
         ListEntity list = new ListEntity();
+
+        if (body != null && body.getTitle() != null && !body.getTitle().isBlank()) {
+            list.setTitle(body.getTitle());
+        }
 
         return ResponseEntity.ok(listEntityRepository.save(list));
     }
