@@ -18,7 +18,7 @@ import java.util.Map;
  * Endpoint for determining the status and API information.
  */
 @RestController
-@RequestMapping("/")
+@RequestMapping("/server")
 public class StatusEndpoints {
 
     @Value("${info.app.name}")
@@ -55,7 +55,7 @@ public class StatusEndpoints {
 
     // Additional redirect for the Swagger UI
     @Hidden
-    @GetMapping("")
+    @GetMapping("dev")
     public ResponseEntity<?> redirectToSwaggerUI() {
         return ResponseEntity.status(302)
                 .header("Location", "/swagger-ui/index.html")
