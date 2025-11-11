@@ -236,9 +236,10 @@
                       <image>amazoncorretto:25</image>
                     </from>
                     <to>
-                      <image>ghcr.io/${project.groupId}/${project.artifactId}</image>
+                      <image>ghcr.io/Tuck-Williamson/Mutual-Inclusion-csci-602-fall-2025-group-project/mut-ink</image>
                       <tags>
                         <tag>${project.version}</tag>
+                        <tag>latest</tag>
                       </tags>
                     </to>
                     <auth>
