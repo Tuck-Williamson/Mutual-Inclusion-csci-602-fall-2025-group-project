@@ -148,9 +148,12 @@ well-suited for CI/CD pipelines.
 
 ##### Prerequisites
 
-* `docker`
+  - `docker` installed
   - Logged into `docker.io` to pull base images
   - Logged into `ghcr.io` (AKA GitHub Container Registry) to push images
+```bash
+echo "$YOUR_GITHUB_PAT" | docker login ghcr.io -u $YOUR_GITHUB_USERNAME --password-stdin
+```
 
 ##### Containerizing to local Docker Daemon
 
@@ -170,4 +173,12 @@ section in `ghcr.io`.  If logged in to `ghcr.io`, the image can be pulled using:
 
 ```bash
 docker pull ghcr.io/mut-ink/mut-ink:latest
+```
+
+#### Running the Containerized Application
+
+To run the containerized application, use the following command:
+
+```bash
+docker run -p 5001:5001 ghcr.io/mut-ink/mut-ink:latest
 ```
