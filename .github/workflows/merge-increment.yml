@@ -30,6 +30,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${{ secrets.GHCR_PAT }}@github.com/${{ github.repository }}.git
 
       - name: Bump patch version
         id: bump
@@ -46,7 +47,7 @@ jobs:
 
           mvn versions:set -DnewVersion=$new -DgenerateBackupPoms=false
           git commit -am "chore: bump version to $new"
-          git push origin HEAD:main
+          git push origin HEAD:master
 
       - name: Log in to GitHub Container Registry
         run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
@@ -61,3 +62,4 @@ jobs:
           echo "✅ Image successfully pushed:"
           echo "ghcr.io/mut-ink/mut-ink-backend:${{ steps.bump.outputs.new }}"
           echo "ghcr.io/mut-ink/mut-ink-backend:latest"
+
