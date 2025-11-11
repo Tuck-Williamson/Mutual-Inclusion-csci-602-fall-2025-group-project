@@ -218,4 +218,42 @@
             </plugin>
         </plugins>
     </build>
+    <profiles>
+    <profile>
+      <id>ghcr-push</id>
+      <build>
+        <plugins>
+            <plugin>
+              <groupId>com.google.cloud.tools</groupId>
+              <artifactId>jib-maven-plugin</artifactId>
+              <version>3.4.6</version>
+              <executions>
+                <execution>
+                  <phase>package</phase>
+                  <id>ghcr-push</id>
+                  <configuration>
+                    <from>
+                      <image>amazoncorretto:25</image>
+                    </from>
+                    <to>
+                      <image>ghcr.io/${project.groupId}/${project.artifactId}</image>
+                      <tags>
+                        <tag>${project.version}</tag>
+                      </tags>
+                    </to>
+                    <auth>
+                      <username>${env.GITHUB_ACTOR}</username>
+                      <password>${env.GITHUB_TOKEN}</password>
+                    </auth>
+                  </configuration>
+                  <goals>
+                    <goal>build</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
+        </plugins>
+      </build>
+    </profile>
+    </profiles>
 </project>

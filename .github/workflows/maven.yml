@@ -45,3 +45,8 @@ jobs:
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: ./mvnw -B test -Dspring.profiles.active=persistence --file pom.xml
+      - name: Build and push image to ghcr.io
+        run: mvn -B package -Pghcr-push
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
