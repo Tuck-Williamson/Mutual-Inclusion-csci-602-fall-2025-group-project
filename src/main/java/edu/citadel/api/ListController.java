@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.sql.SQLDataException;
-import java.util.Map;
+import java.util.List;
 import java.util.Optional;
 import java.time.LocalDateTime;
 
@@ -33,6 +33,11 @@ public class ListController {
             final ListItemEntityRepository listItemEntityRepository) {
         this.listEntityRepository = listEntityRepository;
         this.listItemEntityRepository = listItemEntityRepository;
+    }
+
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<ListEntity>> getAllLists() {
+        return ResponseEntity.ok(listEntityRepository.findAll());
     }
 
     @PostMapping(

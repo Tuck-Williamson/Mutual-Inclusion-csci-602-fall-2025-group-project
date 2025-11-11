@@ -1,5 +1,6 @@
 package edu.citadel.api;
 
+import edu.citadel.api.ListController.UpdateListRequest;
 import edu.citadel.api.request.ListItemRequestBody;
 import edu.citadel.dal.ListEntityRepository;
 import edu.citadel.dal.ListItemEntityRepository;

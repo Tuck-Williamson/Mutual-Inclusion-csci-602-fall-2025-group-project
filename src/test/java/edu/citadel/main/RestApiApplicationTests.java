@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -68,7 +69,9 @@ public class RestApiApplicationTests {
 
     @Test
     public void testListDeleteExist() throws Exception {
-        String response = mockMvc.perform(MockMvcRequestBuilders.post("/list"))
+        String response = mockMvc.perform(MockMvcRequestBuilders.post("/list")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"New List\"}"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andReturn()
                 .getResponse()
@@ -86,7 +89,9 @@ public class RestApiApplicationTests {
 
     @Test
     public void testAddListItemToExistingList() throws Exception {
-        ResultActions postListResult = mockMvc.perform(MockMvcRequestBuilders.post("/list"))
+        ResultActions postListResult = mockMvc.perform(MockMvcRequestBuilders.post("/list")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"New List\"}"))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
         // extract the list id from the response
@@ -110,7 +115,9 @@ public class RestApiApplicationTests {
 
     @Test
     public void testUpdateListItem() throws Exception {
-        ResultActions postListResult = mockMvc.perform(MockMvcRequestBuilders.post("/list"))
+        ResultActions postListResult = mockMvc.perform(MockMvcRequestBuilders.post("/list")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"New List\"}"))
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Integer listId = JsonPath.read(postListResult.andReturn().getResponse().getContentAsString(), "$.id");
 
@@ -143,7 +150,9 @@ public class RestApiApplicationTests {
 
     @Test
     public void testDeleteListItem() throws Exception {
-        ResultActions postListResult = mockMvc.perform(MockMvcRequestBuilders.post("/list"))
+        ResultActions postListResult = mockMvc.perform(MockMvcRequestBuilders.post("/list")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"New List\"}"))
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Integer listId = JsonPath.read(postListResult.andReturn().getResponse().getContentAsString(), "$.id");
 
@@ -170,7 +179,9 @@ public class RestApiApplicationTests {
     @Test
     public void testMarkListItemAsCompleted() throws Exception {
         // Create a new list
-        ResultActions postListResult = mockMvc.perform(MockMvcRequestBuilders.post("/list"))
+        ResultActions postListResult = mockMvc.perform(MockMvcRequestBuilders.post("/list")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"New List\"}"))
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Integer listId = JsonPath.read(postListResult.andReturn().getResponse().getContentAsString(), "$.id");
 
