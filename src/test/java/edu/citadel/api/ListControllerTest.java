@@ -47,9 +47,7 @@ class ListControllerTest {
                     arg.setCreatedOn(mockedTimestamp); // Set the mocked timestamp
                     return arg;
                 });
-        UpdateListRequest request = new UpdateListRequest();
-        request.setTitle("New List");
-        ListEntity result = instance.createList(request).getBody();
+        ListEntity result = instance.createList(null).getBody();
         assertNotNull(result);
         assertEquals(1L, result.getId());
         assertEquals("New List", result.getTitle());
