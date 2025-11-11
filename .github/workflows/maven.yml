@@ -39,3 +39,9 @@ jobs:
         run: ./mvnw -B compile --file pom.xml
       - name: Test with Maven
         run: ./mvnw -B test --file pom.xml
+      - name: Test with Maven using Postgres (Persistence Profile)
+        env:
+          DB_URL: ${{ secrets.DB_URL }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: ./mvnw -B test -Dspring.profiles.active=persistence --file pom.xml
