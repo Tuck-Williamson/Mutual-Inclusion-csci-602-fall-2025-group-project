@@ -27,6 +27,7 @@
         <flyway.version>10.17.1</flyway.version>
         <postgres.version>42.7.3</postgres.version>
         <hibernate.core>6.5.2.Final</hibernate.core>
+        <jib.docker-build.skip>true</jib.docker-build.skip>
     </properties>
 
     <dependencies>
@@ -188,21 +189,33 @@
                     </execution>
                 </executions>
             </plugin>
-      <!-- https://github.com/GoogleContainerTools/jib/tree/master/jib-maven-plugin -->
-      <plugin>
-        <groupId>com.google.cloud.tools</groupId>
-        <artifactId>jib-maven-plugin</artifactId>
-        <version>3.4.6</version>
-      <configuration>
-        <to>
-          <image>mut-ink</image>
-          <tags>
-            <tag>${project.version}</tag>
-          </tags>
-        </to>
-      </configuration>
-      </plugin>
+            <!-- https://github.com/GoogleContainerTools/jib/tree/master/jib-maven-plugin -->
+            <plugin>
+              <groupId>com.google.cloud.tools</groupId>
+              <artifactId>jib-maven-plugin</artifactId>
+              <version>3.4.6</version>
+              <executions>
+                <execution>
+                  <phase>package</phase>
+                  <id>docker-build</id>
+                  <configuration>
+                  <skip>${jib.docker-build.skip}</skip>
+                    <from>
+                      <image>amazoncorretto:25</image>
+                    </from>
+                    <to>
+                      <image>mut-ink</image>
+                      <tags>
+                        <tag>${project.version}</tag>
+                      </tags>
+                    </to>
+                  </configuration>
+                  <goals>
+                    <goal>dockerBuild</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
         </plugins>
     </build>
-
 </project>
