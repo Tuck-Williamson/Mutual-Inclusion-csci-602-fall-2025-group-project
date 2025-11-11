@@ -27,6 +27,7 @@
         <flyway.version>10.17.1</flyway.version>
         <postgres.version>42.7.3</postgres.version>
         <hibernate.core>6.5.2.Final</hibernate.core>
+        <jib.docker-build.skip>true</jib.docker-build.skip>
     </properties>
 
     <dependencies>
@@ -188,7 +189,71 @@
                     </execution>
                 </executions>
             </plugin>
+            <!-- https://github.com/GoogleContainerTools/jib/tree/master/jib-maven-plugin -->
+            <plugin>
+              <groupId>com.google.cloud.tools</groupId>
+              <artifactId>jib-maven-plugin</artifactId>
+              <version>3.4.6</version>
+              <executions>
+                <execution>
+                  <phase>package</phase>
+                  <id>docker-build</id>
+                  <configuration>
+                  <skip>${jib.docker-build.skip}</skip>
+                    <from>
+                      <image>amazoncorretto:25</image>
+                    </from>
+                    <to>
+                      <image>mut-ink</image>
+                      <tags>
+                        <tag>${project.version}</tag>
+                      </tags>
+                    </to>
+                  </configuration>
+                  <goals>
+                    <goal>dockerBuild</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
         </plugins>
     </build>
-
+    <profiles>
+    <profile>
+      <id>ghcr-push</id>
+      <build>
+        <plugins>
+            <plugin>
+              <groupId>com.google.cloud.tools</groupId>
+              <artifactId>jib-maven-plugin</artifactId>
+              <version>3.4.6</version>
+              <executions>
+                <execution>
+                  <phase>package</phase>
+                  <id>ghcr-push</id>
+                  <configuration>
+                    <from>
+                      <image>amazoncorretto:25</image>
+                    </from>
+                    <to>
+                    <image>ghcr.io/mut-ink/mut-ink</image>
+                      <tags>
+                        <tag>${project.version}</tag>
+                      </tags>
+                    </to>
+                    <auth>
+                      <username>${env.GITHUB_ACTOR}</username>
+                      <password>${env.GITHUB_TOKEN}</password>
+                    </auth>
+                  </configuration>
+                  <goals>
+                    <goal>build</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
+        </plugins>
+      </build>
+    </profile>
+    </profiles>
 </project>

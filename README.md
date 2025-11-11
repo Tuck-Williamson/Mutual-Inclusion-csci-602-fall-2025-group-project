@@ -134,3 +134,51 @@ mvn spring-boot:run -Dspring-boot.run.profiles=persistence
 
 Alternatively, you can set the active profile in your IDE's run configuration to `persistence` and ensure the environment variables from the `.env` file are loaded.
 ![Run Configuration For Persistence](images/persistent-run-configuration.png)
+
+### Containerization
+
+Containerization is a method of packaging an application into a contained package
+that can be distributed amongst diverse environments, including virtual machines,
+servers, etc.
+
+Containerization allows us to easily version and distribute our application, and is 
+well-suited for CI/CD pipelines.
+
+#### Containerization using jib maven plugin
+
+##### Prerequisites
+
+  - `docker` installed
+  - Logged into `docker.io` to pull base images
+  - Logged into `ghcr.io` (AKA GitHub Container Registry) to push images
+```bash
+echo "$YOUR_GITHUB_PAT" | docker login ghcr.io -u $YOUR_GITHUB_USERNAME --password-stdin
+```
+
+##### Containerizing to local Docker Daemon
+
+This is attached to the build process, but is set to skip automatically 
+by default.  To run this as part of the build and create an image on your 
+local docker daemon, run the following command:
+
+```bash
+mvn -B package -Djib.docker-build.skip=false
+```
+
+
+#### CI/CD with GitHub Actions
+
+The workflow file now pushes the built image to the `Mut-Ink` organization's package
+section in `ghcr.io`.  If logged in to `ghcr.io`, the image can be pulled using:
+
+```bash
+docker pull ghcr.io/mut-ink/mut-ink:latest
+```
+
+#### Running the Containerized Application
+
+To run the containerized application, use the following command:
+
+```bash
+docker run -p 5001:5001 ghcr.io/mut-ink/mut-ink:latest
+```
