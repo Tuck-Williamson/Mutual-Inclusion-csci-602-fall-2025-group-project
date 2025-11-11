@@ -35,12 +35,6 @@ jobs:
         with:
           java-version: 17
           distribution: corretto
-      - name: Log in to GitHub Container Registry
-        run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-      - name: Build and push image to ghcr.io
-        run: mvn -B package -Pghcr-push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GHCR_PAT }}
       - name: Build with Maven
         run: ./mvnw -B compile --file pom.xml
       - name: Test with Maven
@@ -51,3 +45,9 @@ jobs:
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: ./mvnw -B test -Dspring.profiles.active=persistence --file pom.xml
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Build and push image to ghcr.io
+        run: mvn -B package -Dmaven.test.skip=true -Pghcr-push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GHCR_PAT }}
