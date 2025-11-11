@@ -12,6 +12,10 @@
 .sts4-cache
 .java-version
 
+### Environment Files ###
+.env
+.local/
+
 ### IntelliJ IDEA ###
 .idea
 *.iws

@@ -112,3 +112,25 @@ There are two main executions for JaCoCo in the `pom.xml` file:
 7.  Within the editor, you can see the coverage for each line of code (green = covered, red = not covered, yellow = partially covered)
 
 ![Coverage View Within the Editor](images/coverage-in-editor.png)
+
+
+### Persistence Using PostgreSQL Credentials
+
+- **Requirements**: You must have your credentials from the beginning of the semester to access the PostgreSQL database.
+- **Configuration**: Create a `.env` file in the root directory of the project with the following content:
+```env
+DB_URL="jdbc:your:database:url"
+DB_USERNAME="your_database_username"
+DB_PASSWORD="your_database_password"
+```
+
+#### Running with Persistence Profile
+Once the `.env` file is created, you can run the application using the `persistence` profile to enable database connectivity:
+To run the application from the command line:
+```bash
+export $(grep -v -e "^#\s*" .env | sed "s/#.*$//" | xargs)
+mvn spring-boot:run -Dspring-boot.run.profiles=persistence
+```
+
+Alternatively, you can set the active profile in your IDE's run configuration to `persistence` and ensure the environment variables from the `.env` file are loaded.
+![Run Configuration For Persistence](images/persistent-run-configuration.png)
