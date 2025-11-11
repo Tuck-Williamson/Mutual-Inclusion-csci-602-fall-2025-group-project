@@ -1,5 +1,6 @@
 package edu.citadel.api;
 
+import edu.citadel.api.ListController.UpdateListRequest;
 import edu.citadel.api.request.ListItemRequestBody;
 import edu.citadel.dal.ListEntityRepository;
 import edu.citadel.dal.ListItemEntityRepository;
@@ -44,7 +45,9 @@ class ListControllerTest {
                     arg.setCreatedOn(mockedTimestamp); // Set the mocked timestamp
                     return arg;
                 });
-        ListEntity result = instance.createList().getBody();
+        UpdateListRequest request = new UpdateListRequest();
+        request.setTitle("New List");
+        ListEntity result = instance.createList(request).getBody();
         assertNotNull(result);
         assertEquals(1L, result.getId());
         assertEquals("New List", result.getTitle());
