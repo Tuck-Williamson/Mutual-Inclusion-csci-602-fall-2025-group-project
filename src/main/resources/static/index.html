@@ -1,134 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MutInc - Mutual Inclusion (Preact)</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>MutInc - Mutual Inclusion</title>
+
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Preact / HTM -->
     <script src="https://unpkg.com/preact@10.5.15/dist/preact.umd.js"></script>
     <script src="https://unpkg.com/preact@10.5.15/hooks/dist/hooks.umd.js"></script>
     <script src="https://unpkg.com/htm@3.1.0/dist/htm.umd.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
+    <!-- FontAwesome -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+    <!-- Import Map -->
     <script type="importmap">
         {
-            "imports": {
-                "./account": "./js/account.js",
-                "./lists": "./js/lists.js",
-                "./list-detail": "./js/list_detail.js",
-                "./modal": "./js/modal.js"
-            }
+          "imports": {
+            "lists": "/js/lists.js",
+            "account": "/js/account.js",
+            "list-detail": "/js/list_detail.js",
+            "modal": "/js/modal.js"
+          }
         }
     </script>
+
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #333;
-        }
-        .container {
-            background: white;
-            padding: 40px 30px;
-            border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            width: 90%;
-            max-width: 800px;
-            margin: 20px;
-        }
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 20px;
-            margin-bottom: 20px;
-        }
-        header h1 { color: #667eea; font-size: 2em; }
-        header a { cursor: pointer; color: #667eea; text-decoration: none; }
-        button {
-            display: inline-block;
-            padding: 12px 25px;
-            background: #667eea;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            transition: background 0.3s ease;
-            font-weight: 500;
-            border: none;
-            cursor: pointer;
-        }
-        button:hover { background: #764ba2; }
-        input[type="text"] {
-            width: calc(100% - 24px);
-            padding: 12px;
-            margin-bottom: 10px;
-            border-radius: 5px;
-            border: 1px solid #ddd;
-        }
-        ul { list-style: none; padding: 0; }
-        li { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        li:hover { background: #f9f9f9; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; }
         .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .modal-content {
-            background: white;
-            padding: 20px;
-            border-radius: 5px;
-            width: 90%;
-            max-width: 500px;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
         }
     </style>
 </head>
-<body>
-    <div id="app"></div>
 
-    <script type="module">
-        const { h, render, Component } = preact;
-        const { useState, useEffect } = preactHooks;
-        import {AccountPage} from './account';
-        import {ListsPage} from './lists';
-        import {ListDetailPage} from './list-detail';
+<body class="min-h-screen bg-gradient-to-br from-indigo-400 to-purple-600 text-gray-900">
 
-        const html = htm.bind(h);
+<!-- USERNAME PILL -->
+<div class="fixed top-4 right-4 z-50">
+    <button
+            id="username-pill"
+            class="px-4 py-1.5 rounded-full shadow-lg bg-blue-600 text-white
+               text-sm font-semibold
+               lg:px-6 lg:py-2 lg:text-base
+               hover:bg-blue-700 transition">
+        <i class="fa-solid fa-user mr-2"></i> Username
+    </button>
+</div>
 
-        const App = () => {
-            const [page, setPage] = useState('lists');
-            const [currentList, setCurrentList] = useState(null);
+<div id="app" class="w-full"></div>
 
-            const navigate = (page, list = null) => {
-                setCurrentList(list);
-                setPage(page);
-            };
+<!-- APP SCRIPT -->
+<script type="module">
+    const { h, render } = preact;
+    const { useState } = preactHooks;
+    const html = htm.bind(h);
 
-            let content;
-            if (page === 'lists') {
-                content = html`<${ListsPage} navigate=${navigate} />`;
-            } else if (page === 'account') {
-                content = html`<${AccountPage} navigate=${navigate} />`;
-            } else if (page === 'list-detail' && currentList) {
-                content = html`<${ListDetailPage} list=${currentList} navigate=${navigate} />`;
+    import ListsPage from "lists";
+    import AccountPage from "account";
+    import ListDetailPage from "list-detail";
+
+    const App = () => {
+        const [page, setPage] = useState("lists");
+        const [currentList, setCurrentList] = useState(null);
+
+        // FIXED NAVIGATION (unwrap wrapped list object)
+        const navigate = (p, data = null) => {
+            if (data && data.list) {
+                setCurrentList(data.list);  // unwrap
+            } else {
+                setCurrentList(data);
             }
-
-            return html`<div class="container">${content}</div>`;
+            setPage(p);
         };
 
+        document.getElementById("username-pill").onclick = () => navigate("account");
 
-        render(html`<${App} />`, document.getElementById('app'));
-    </script>
+        let content;
+        if (page === "lists") {
+            content = html`<${ListsPage} navigate=${navigate} />`;
+        }
+        if (page === "account") {
+            content = html`<${AccountPage} navigate=${navigate} />`;
+        }
+        if (page === "list-detail" && currentList) {
+            content = html`<${ListDetailPage} list=${currentList} navigate=${navigate} />`;
+        }
+
+        return html`
+            <div class="mx-auto max-w-4xl bg-white shadow-2xl rounded-2xl
+                        mt-16 p-6 sm:p-8 lg:p-12">
+                ${content}
+            </div>
+        `;
+    };
+
+    render(html`<${App} />`, document.getElementById("app"));
+</script>
+
 </body>
 </html>

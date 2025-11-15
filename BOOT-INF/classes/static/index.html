@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MutInc - Mutual Inclusion (Preact)</title>
+
+    <!-- TailwindCSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.4/dist/tailwind.min.css" rel="stylesheet">
+
+    <!-- Preact + HTM -->
+    <script src="https://unpkg.com/preact@10.5.15/dist/preact.umd.js"></script>
+    <script src="https://unpkg.com/preact@10.5.15/hooks/dist/hooks.umd.js"></script>
+    <script src="https://unpkg.com/htm@3.1.0/dist/htm.umd.js"></script>
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script type="importmap">
+        {
+            "imports": {
+                "./account": "./js/account.js",
+                "./lists": "./js/lists.js",
+                "./list-detail": "./js/list_detail.js",
+                "./modal": "./js/modal.js"
+            }
+        }
+    </script>
+
+    <style>
+        /* keep only modal styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            width: 90%;
+            max-width: 500px;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-indigo-400 to-purple-600 text-gray-900">
+
+<div id="app" class="w-full"></div>
+
+<script type="module">
+    const { h, render } = preact;
+    const { useState } = preactHooks;
+    const html = htm.bind(h);
+
+    import { AccountPage } from './account';
+    import { ListsPage } from './lists';
+    import { ListDetailPage } from './list-detail';
+
+    const App = () => {
+        const [page, setPage] = useState('lists');
+        const [currentList, setCurrentList] = useState(null);
+
+        const navigate = (p, list = null) => {
+            setCurrentList(list);
+            setPage(p);
+        };
+
+        let content;
+        if (page === 'lists') content = html`<${ListsPage} navigate=${navigate} />`;
+        if (page === 'account') content = html`<${AccountPage} navigate=${navigate} />`;
+        if (page === 'list-detail' && currentList)
+            content = html`<${ListDetailPage} list=${currentList} navigate=${navigate} />`;
+
+        return html`
+            <div class="w-full">
+                ${content}
+            </div>
+        `;
+    };
+
+    render(html`<${App} />`, document.getElementById('app'));
+</script>
+</body>
+</html>
