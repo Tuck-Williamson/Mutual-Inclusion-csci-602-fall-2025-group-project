@@ -3,6 +3,7 @@
 const { h } = preact;
 const { useState, useEffect } = preactHooks;
 import { Modal } from "./modal.js";
+import { subscribeToList, disconnect, isConnected } from "websocket";
 
 const html = htm.bind(h);
 
@@ -20,6 +21,28 @@ const ListDetailPage = ({ list, navigate }) => {
     };
 
     useEffect(fetchItems, [list.id]);
+
+    // This is used for websocket connection. It calls the returned callback when the component is unmounted.
+    useEffect(() => {
+
+        // TODO Better initialization handling ... retries.
+        if( !isConnected() ) return console.log(
+            'Websockets not connected. Please refresh the page to reconnect.'
+        )
+
+        // Subscribe to the list's websocket channel. The callback just updates the UI.
+        const subscription_unsub = subscribeToList(list.id, data => {
+            //We are not using the data here, but we could use it to update the UI.
+            console.log('Received websocket message:', data);
+            fetchItems();
+        })
+
+        // This function is the cleanup function, called on unmount.
+        return () => {
+            console.log('Websockets unsubscribing.');
+            subscription_unsub();
+        };
+    }, []);
 
     const addItem = () => {
         const trimmed = newItemName.trim();

@@ -18,6 +18,11 @@
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
 
+    <!-- SockJS and STOMP for WebSocket -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+
     <!-- Import Map -->
     <script type="importmap">
         {
@@ -25,7 +30,8 @@
             "lists": "/js/lists.js",
             "account": "/js/account.js",
             "list-detail": "/js/list_detail.js",
-            "modal": "/js/modal.js"
+            "modal": "/js/modal.js",
+            "websocket": "/js/web_socket_list_manager.js"
           }
         }
     </script>
@@ -54,10 +60,22 @@
 
 <div id="app" class="w-full"></div>
 
+<!--WebSocket init script-->
+<script type="module">
+    import { initWebSocket } from "websocket";
+
+    // TODO Error UI
+    initWebSocket()
+        .then(console.log("WebSocket connected successfully!"))
+        .catch(err => console.error("Failed to connect to WebSocket:", err));
+
+</script>
+
 <!-- APP SCRIPT -->
 <script type="module">
     const { h, render } = preact;
     const { useState } = preactHooks;
+
     const html = htm.bind(h);
 
     import ListsPage from "lists";
