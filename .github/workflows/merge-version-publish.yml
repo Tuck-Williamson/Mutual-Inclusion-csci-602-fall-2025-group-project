@@ -6,7 +6,7 @@ on:
 
 jobs:
   merge-build:
-    if: github.event.pull_request.mergeed == true && github.event.pull_request.base.ref == 'master'
+    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'master'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -66,11 +66,13 @@ jobs:
     - name: Build & Push Release Image (Jib)
       run: |
         IMAGE="ghcr.io/mut-ink/mut-ink:${NEW_VERSION}"
-        mvn -B -Pghcr-push -Djib.to.image="$IMAGE" jib:build \
+        mvn -B package -Pghcr-push -Dmaven.test.skip=true \
+          -Djib.to.image="$IMAGE" jib:build \
           -Djib.to.auth.username="${{ github.actor }}" \
           -Djib.to.auth.password="${{ secrets.GHCR_PAT }}"
         IMAGE_LATEST="ghcr.io/mut-ink/mut-ink:latest"
-        mvn -B -Pghcr-push -Djib.to.image="$IMAGE_LATEST" jib:build \
+        mvn -B package -Pghcr-push -Dmaven.test.skip=true \
+          -Djib.to.image="$IMAGE_LATEST" jib:build \
           -Djib.to.auth.username="${{ github.actor }}" \
           -Djib.to.auth.password="${{ secrets.GHCR_PAT }}"
         
