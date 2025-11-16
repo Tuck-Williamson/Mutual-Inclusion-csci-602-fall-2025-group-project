@@ -19,9 +19,9 @@ jobs:
         run: ./mvnw -B compile --file pom.xml
       - name: Test with Maven
         run: ./mvnw -B test --file pom.xml
-      - name: Log in to GitHub Container Registry
-        run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-      - name: Build and push image to ghcr.io
-        run: mvn -B package -Dmaven.test.skip=true -Pghcr-push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GHCR_PAT }}
+      # - name: Log in to GitHub Container Registry
+      #   run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      # - name: Build and push image to ghcr.io
+      #   run: mvn -B package -Dmaven.test.skip=true -Pghcr-push
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GHCR_PAT }}
