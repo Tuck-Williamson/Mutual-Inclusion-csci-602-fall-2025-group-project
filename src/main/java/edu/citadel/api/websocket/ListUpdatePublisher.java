@@ -45,7 +45,7 @@ public class ListUpdatePublisher {
      */
     public void publishListCreated(ListEntity listEntity) {
         publishListUpdate(listEntity.getId(), 
-                ListUpdateMessage.fromEntity(listEntity, "CREATED"));
+                ListUpdateMessage.fromEntity(listEntity, "LIST-CREATED"));
     }
 
     /**
@@ -53,7 +53,7 @@ public class ListUpdatePublisher {
      */
     public void publishListUpdated(ListEntity listEntity) {
         publishListUpdate(listEntity.getId(), 
-                ListUpdateMessage.fromEntity(listEntity, "UPDATED"));
+                ListUpdateMessage.fromEntity(listEntity, "LIST-UPDATED"));
     }
 
     /**
@@ -61,7 +61,7 @@ public class ListUpdatePublisher {
      */
     public void publishListDeleted(ListEntity listEntity) {
         publishListUpdate(listEntity.getId(), 
-                ListUpdateMessage.fromEntity(listEntity, "DELETED"));
+                ListUpdateMessage.fromEntity(listEntity, "LIST-DELETED"));
     }
 
     /**

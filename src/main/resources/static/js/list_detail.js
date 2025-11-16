@@ -34,6 +34,17 @@ const ListDetailPage = ({ list, navigate }) => {
         const subscription_unsub = subscribeToList(list.id, data => {
             //We are not using the data here, but we could use it to update the UI.
             console.log('Received websocket message:', data);
+
+            // Handle special case where the list was deleted.
+            if(data.event_type === 'LIST-DELETED'){
+                navigate('lists');
+                return;
+            }
+            else if(data.event_type === 'LIST-UPDATED'){
+                //Just in case the title changed.
+                list.title = data.title;
+            }
+
             fetchItems();
         })
 
@@ -102,7 +113,7 @@ const ListDetailPage = ({ list, navigate }) => {
         <div class="space-y-8">
 
             <header class="flex items-center justify-between pb-2 border-b border-gray-200">
-                <h1 class="font-bold text-gray-900 text-2xl sm:text-3xl lg:text-4xl xl:text-5xl">
+                <h1 id="ListTitle" class="font-bold text-gray-900 text-2xl sm:text-3xl lg:text-4xl xl:text-5xl">
                     ${list.title || "Untitled List"}
                 </h1>
 

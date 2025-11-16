@@ -59,12 +59,12 @@ export function subscribeToList(listId, callback) {
 
     // TODO: Clean this up. If promise based then make rest of function async.
     let subscription = stompClient.subscribe(topic, (message) => {
-        callback(message.body);
-        // try {
-        //     const update = JSON.parse(message.body); // For if we want to parse the message body in the future.
-        // } catch (e) {
-        //     console.error('Failed to parse message:', e);
-        // }
+        try {
+            const update = JSON.parse(message.body);
+            callback(update);
+        } catch (e) {
+            console.error('Failed to parse message:', e);
+        }
     });
 
     subscriptions[listId] = subscription;
