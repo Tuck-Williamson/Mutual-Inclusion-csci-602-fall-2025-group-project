@@ -45,7 +45,7 @@ jobs:
           LATEST: ${{ env.LATEST }}
           PR_LABELS: ${{ toJson(github.event.pull_request.labels.*.name) }}
         run: |
-          LABEL_LIST=$(echo "$PR_LABELS" | jq -r '.[]')
+          LABEL_LIST=$(echo "$PR_LABELS" | jq -r '.[]' || true)
 
           IFS='.' read -r MAJOR MINOR PATCH <<< "$LATEST"
 
