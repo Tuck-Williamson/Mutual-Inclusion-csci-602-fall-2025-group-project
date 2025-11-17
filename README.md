@@ -193,3 +193,5 @@ docker run -p 5001:5001 ghcr.io/mut-ink/mut-ink:latest
 
 * When digital ocean finds the new tag, it should automatically deploy.
 
+* I'm so tired :0()
+
