@@ -44,14 +44,12 @@ jobs:
 
 
           echo "JSON: $JSON"
-
-          # if [ -z "$JSON" ]; then
-          #   echo "LATEST=0.0.0" >> $GITHUB_OUTPUT
-          #   exit 0
-          # fi
+          echo "$JSON" | \
+          jq -r '.[] | .metadata.container.tags[] | select(test("\\d+\\.\\d+\\.\\d+"))' | \
+          sort -V | tail -n 1
 
           LATEST=$(echo "$JSON" \
-            | jq -r '.[] | .metadata.container.tags[] | select(test("^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][a-zA-Z0-9-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][a-zA-Z0-9-]*))*))?(?:\\+([a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*))?$"))' \
+            | jq -r '.[] | .metadata.container.tags[] | select(test("\\d+\\.\\d+\\.\\d+"))' \
             | sort -V | tail -n 1)
 
           echo "Latest set to '$LATEST'"
