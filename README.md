@@ -191,5 +191,5 @@ docker run -p 5001:5001 ghcr.io/mut-ink/mut-ink:latest
 * Merging a PR with a label of `release:major` will increment the major version number (0.0.0 -> 1.0.0).
 * If `release:major` is not provided but `release:minor` is in included, will increment the minor release (0.0.0 -> 0.1.0).
 
-* []TODO: Add more information here.
+* When digital ocean finds the new tag, it should automatically deploy.
 
