@@ -56,8 +56,18 @@ jobs:
           PR_NUMBER=${{ github.event.pull_request.number }}
           gh api -H "Accept: application/vnd.github+json" \
           /orgs/mut-ink/packages/container/mut-ink-test/versions \
-          | jq -r '.[] | select(.metadata.container.tags[] | test("pr-'$PR_NUMBER'")) | .id' \
-          | xargs -n1 -I {} gh api \
-            -X DELETE /orgs/mut-ink/packages/container/mut-ink-test/versions/{}
+          | jq -c '.[]' | while read -r version; do
+            VERSION_ID=$(echo "$version" | jq -r '.id')
+            TAGS=$(echo "$version" \
+              | jq -r '.metadata.container.tags[]')
 
+            for TAG in $TAGS; do
+              if echo "$TAG" | grep -q "pr-${PR_NUMBER}-"; then
+                echo "Deleting PR tag $TAG from version $VERSION_ID"
 
+                gh api \
+                  -X DELETE \
+                  "/orgs/mut-ink/packages/container/mut-ink-test/versions/${VERSION_ID}/tags/${TAG}"
+              fi
+            done
+          done
