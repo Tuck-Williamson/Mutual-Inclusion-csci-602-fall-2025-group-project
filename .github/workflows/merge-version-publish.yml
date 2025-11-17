@@ -41,13 +41,17 @@ jobs:
 
       - name: Determine New Version
         id: bump
+        env:
+          LATEST: ${{ env.LATEST }}
+          PR_LABELS: ${{ toJson(github.event.pull_request.labels.*.name) }}
         run: |
-          LATEST=$LATEST
+          LABEL_LIST=$(echo "$PR_LABELS" | jq -r '.[]')
+
           IFS='.' read -r MAJOR MINOR PATCH <<< "$LATEST"
 
           ### Check PR Labels for a Major Or Minor Bump
-          MAJOR_BUMP=$(echo "${{ github.event.pull_request.labels[*] }}" | grep -c "release:major")
-          MINOR_BUMP=$(echo "${{ github.event.pull_request.labels[*] }}" | grep -c "release:minor")
+          MAJOR_BUMP=$(echo "$LABEL_LIST" | grep -c "release:major")
+          MINOR_BUMP=$(echo "$LABEL_LIST" | grep -c "release:minor")
 
           if [ $MAJOR_BUMP -gt 0 ]; then
             MAJOR=$((MAJOR + 1))
