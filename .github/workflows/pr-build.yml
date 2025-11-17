@@ -50,9 +50,10 @@ jobs:
       packages: write
     steps:
       - name: Delete PR Image Tags
+        env:
+          GH_TOKEN: ${{ secrets.GHCR_PAT }}
         run: |
           PR_NUMBER=${{ github.event.pull_request.number }}
-          GH_TOKEN="${{ secrets.GHCR_PAT }}"
           gh api -H "Accept: application/vnd.github+json" \
           /orgs/mut-ink/packages/container/mut-ink-test/versions \
           | jq -r '.[] | select(.metadata.container.tags[] | test("pr-'$PR_NUMBER'")) | .id' \
