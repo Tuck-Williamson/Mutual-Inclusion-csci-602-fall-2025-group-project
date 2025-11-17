@@ -196,5 +196,6 @@ docker run -p 5001:5001 ghcr.io/mut-ink/mut-ink:latest
 * I'm so tired :0()
 * Let's do A minor release!
 * whut....?
+* just one commit will essentially make it so that the tags remain
 
 
