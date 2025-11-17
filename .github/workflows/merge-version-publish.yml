@@ -4,12 +4,10 @@ on:
   pull_request_target:
     types: 
       - closed
-      - opened
 
 jobs:
   merge-build:
-    # if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'test-master'
-    if: github.event.pull_request.base.ref == 'test-master'
+    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'test-master'
     runs-on: ubuntu-latest
     permissions:
       contents: read
