@@ -3,6 +3,7 @@
 const { h } = preact;
 const { useState, useEffect } = preactHooks;
 import { Modal } from "./modal.js";
+import { subscribeToList, disconnect, isConnected } from "websocket";
 
 const html = htm.bind(h);
 
@@ -20,6 +21,39 @@ const ListDetailPage = ({ list, navigate }) => {
     };
 
     useEffect(fetchItems, [list.id]);
+
+    // This is used for websocket connection. It calls the returned callback when the component is unmounted.
+    useEffect(() => {
+
+        // TODO Better initialization handling ... retries.
+        if( !isConnected() ) return console.log(
+            'Websockets not connected. Please refresh the page to reconnect.'
+        )
+
+        // Subscribe to the list's websocket channel. The callback just updates the UI.
+        const subscription_unsub = subscribeToList(list.id, data => {
+            //We are not using the data here, but we could use it to update the UI.
+            console.log('Received websocket message:', data);
+
+            // Handle special case where the list was deleted.
+            if(data.event_type === 'LIST-DELETED'){
+                navigate('lists');
+                return;
+            }
+            else if(data.event_type === 'LIST-UPDATED'){
+                //Just in case the title changed.
+                list.title = data.title;
+            }
+
+            fetchItems();
+        })
+
+        // This function is the cleanup function, called on unmount.
+        return () => {
+            console.log('Websockets unsubscribing.');
+            subscription_unsub();
+        };
+    }, []);
 
     const addItem = () => {
         const trimmed = newItemName.trim();
@@ -79,7 +113,7 @@ const ListDetailPage = ({ list, navigate }) => {
         <div class="space-y-8">
 
             <header class="flex items-center justify-between pb-2 border-b border-gray-200">
-                <h1 class="font-bold text-gray-900 text-2xl sm:text-3xl lg:text-4xl xl:text-5xl">
+                <h1 id="ListTitle" class="font-bold text-gray-900 text-2xl sm:text-3xl lg:text-4xl xl:text-5xl">
                     ${list.title || "Untitled List"}
                 </h1>
 

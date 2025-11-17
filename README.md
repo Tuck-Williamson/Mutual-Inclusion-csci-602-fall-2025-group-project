@@ -111,7 +111,7 @@ There are two main executions for JaCoCo in the `pom.xml` file:
 
 7.  Within the editor, you can see the coverage for each line of code (green = covered, red = not covered, yellow = partially covered)
 
-![Coverage View Within the Editor](images/coverage-in-editor.png)
+![Coverage View Within the Editor](images/coverage-in-editor.png)   
 
 
 ### Persistence Using PostgreSQL Credentials

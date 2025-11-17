@@ -2,6 +2,7 @@ package edu.citadel.api;
 
 import edu.citadel.api.request.CreateListRequest;
 import edu.citadel.api.request.ListItemRequestBody;
+import edu.citadel.api.websocket.ListUpdatePublisher;
 import edu.citadel.dal.ListEntityRepository;
 import edu.citadel.dal.ListItemEntityRepository;
 import edu.citadel.dal.model.ListEntity;
@@ -26,13 +27,17 @@ public class ListController {
     private final ListEntityRepository listEntityRepository;
 
     private final ListItemEntityRepository listItemEntityRepository;
+    
+    private final ListUpdatePublisher listUpdatePublisher;
 
     @Autowired
     public ListController(
             final ListEntityRepository listEntityRepository,
-            final ListItemEntityRepository listItemEntityRepository) {
+            final ListItemEntityRepository listItemEntityRepository,
+            final ListUpdatePublisher listUpdatePublisher) {
         this.listEntityRepository = listEntityRepository;
         this.listItemEntityRepository = listItemEntityRepository;
+        this.listUpdatePublisher = listUpdatePublisher;
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
@@ -51,7 +56,9 @@ public class ListController {
             list.setTitle(body.getTitle());
         }
 
-        return ResponseEntity.ok(listEntityRepository.save(list));
+        ListEntity savedList = listEntityRepository.save(list);
+        listUpdatePublisher.publishListCreated(savedList);
+        return ResponseEntity.ok(savedList);
     }
 
     /**
@@ -103,6 +110,7 @@ public class ListController {
                         }
 
                         ListEntity updatedList = this.listEntityRepository.save(existingList);
+                        listUpdatePublisher.publishListUpdated(updatedList);
                         return ResponseEntity.ok(updatedList);
                     })
                     .orElse(ResponseEntity.notFound().build());
@@ -126,6 +134,7 @@ public class ListController {
         return listEntityRepository.findById(id).map(list -> {
             Hibernate.initialize(list.getListItems()); // initialize the list
             listEntityRepository.delete(list);
+            listUpdatePublisher.publishListDeleted(list);
             return ResponseEntity.ok(list);
         }).orElse(ResponseEntity.notFound().build());
     }
@@ -150,8 +159,10 @@ public class ListController {
                                 listItemRequest.getListItemDescription()
                         ).ifPresent(listItemEntity::setListItemDesc);
             });
-            return listItemEntityRepository.save(listItemEntity);
-        }).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+            ListItemEntity savedItem = listItemEntityRepository.save(listItemEntity);
+            listUpdatePublisher.publishListItemCreated(savedItem);
+            return ResponseEntity.ok(savedItem);
+        }).orElse(ResponseEntity.notFound().build());
     }
 
 
@@ -181,7 +192,9 @@ public class ListController {
                             .ifPresent(listItemEntity::setListItemName);
                     Optional.ofNullable(listItem.getListItemDescription())
                             .ifPresent(listItemEntity::setListItemDesc);
-                    return ResponseEntity.ok(listItemEntityRepository.save(listItemEntity));
+                    ListItemEntity updatedItem = listItemEntityRepository.save(listItemEntity);
+                    listUpdatePublisher.publishListItemUpdated(updatedItem);
+                    return ResponseEntity.ok(updatedItem);
                 }).orElse(ResponseEntity.of(
                         ProblemDetail.forStatusAndDetail(
                                 HttpStatus.INTERNAL_SERVER_ERROR,
@@ -206,7 +219,9 @@ public class ListController {
                 .map(listItemEntity -> {
                     listItemEntity.setCompleted(completed);
                     listItemEntity.setCompletedOn(completed ? LocalDateTime.now() : null);
-                    return ResponseEntity.ok(listItemEntityRepository.save(listItemEntity));
+                    ListItemEntity updatedItem = listItemEntityRepository.save(listItemEntity);
+                    listUpdatePublisher.publishListItemUpdated(updatedItem);
+                    return ResponseEntity.ok(updatedItem);
                 })
                 .orElse(ResponseEntity.internalServerError().build());
 
@@ -223,6 +238,7 @@ public class ListController {
         return listItemEntityRepository.findById(listItemId)
                 .map(listItemEntity -> {
                     listItemEntityRepository.delete(listItemEntity);
+                    listUpdatePublisher.publishListItemDeleted(listItemEntity);
                     return ResponseEntity.ok(listItemEntity);
                 }).orElse(ResponseEntity.of(
                         ProblemDetail.forStatusAndDetail(
