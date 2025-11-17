@@ -236,7 +236,7 @@
                       <image>amazoncorretto:25</image>
                     </from>
                     <to>
-                    <image>ghcr.io/mut-ink/mut-ink</image>
+                    <image>ghcr.io/mut-ink/mut-ink-test</image>
                       <tags>
                         <tag>${project.version}</tag>
                       </tags>
