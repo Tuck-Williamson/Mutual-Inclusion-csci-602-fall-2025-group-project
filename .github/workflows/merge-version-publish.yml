@@ -46,9 +46,10 @@ jobs:
           fi
 
           LATEST=$(echo "$JSON" \
-            | jq -r '.[] | .metadata.container.tags[] | select(test("^[0-9]+\\.[0-9]+\\.[0-9]+$"))' \
+            | jq -r '.[] | .metadata.container.tags[] | select(test("^[0-9]+\\\\.[0-9]+\\\\.[0-9]+$"))' \
             | sort -V | tail -n 1)
 
+          echo "Latest set to '$LATEST'"
           if [ -z "$LATEST" ]; then
             LATEST="0.0.0"
           fi
