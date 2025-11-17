@@ -13,9 +13,12 @@ jobs:
       packages: write
 
     steps:
-      - name: Checkout
+
+      - name: Checkout merge commit safely
         uses: actions/checkout@v4
         with:
+          # Ensures we build the actual merged code, not attacker PR code
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
           fetch-depth: 0
 
       - name: Setup JDK
@@ -24,62 +27,84 @@ jobs:
           distribution: corretto
           java-version: 17
 
+      ############################################################
+      # 1. Get Latest Version from GHCR
+      ############################################################
       - name: Get Latest GHCR Semantic Version
         id: version
         env:
-          GH_TOKEN: ${{ secrets.GHCR_PAT }}
-        run: | 
-          LATEST=$(gh api -H "Accept: application/vnd.github+json" \
-                  /orgs/mut-ink/packages/container/mut-ink-test/versions \
-                  | jq -r '.[] | .metadata.container.tags[] | select(test("^[0-9]+\\.[0-9]+\\.[0-9]+$"))' \
-                  | sort -V | tail -n1)
-          if [ -z $LATEST ]; then
+          GH_TOKEN: ${{ secrets.GHCR_PAT }}   # MUST have read:packages
+        run: |
+          echo "Fetching GHCR versions..."
+
+          JSON=$(gh api -H "Accept: application/vnd.github+json" \
+                  /orgs/mut-ink/packages/container/mut-ink-test/versions 2>/dev/null || echo "")
+
+          if [ -z "$JSON" ]; then
+            echo "LATEST=0.0.0" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          LATEST=$(echo "$JSON" \
+            | jq -r '.[] | .metadata.container.tags[] | select(test("^[0-9]+\.[0-9]+\.[0-9]+$"))' \
+            | sort -V | tail -n 1)
+
+          if [ -z "$LATEST" ]; then
             LATEST="0.0.0"
           fi
-          echo "LATEST=$LATEST" >> $GITHUB_ENV
+
+          echo "Latest GHCR version: $LATEST"
+          echo "LATEST=$LATEST" >> $GITHUB_OUTPUT
 
 
+      ############################################################
+      # 2. Compute NEW version based on PR labels
+      ############################################################
       - name: Determine New Version
         id: bump
         env:
-          LATEST: ${{ env.LATEST }}
+          LATEST: ${{ steps.version.outputs.LATEST }}
           PR_LABELS: ${{ toJson(github.event.pull_request.labels.*.name) }}
         run: |
+          echo "Current latest version: $LATEST"
           LABEL_LIST=$(echo "$PR_LABELS" | jq -r '.[]' || true)
 
           IFS='.' read -r MAJOR MINOR PATCH <<< "$LATEST"
 
-          ### Check PR Labels for a Major Or Minor Bump
-          MAJOR_BUMP=$(echo "$LABEL_LIST" | grep -c "release:major")
-          MINOR_BUMP=$(echo "$LABEL_LIST" | grep -c "release:minor")
-
-          if [ $MAJOR_BUMP -gt 0 ]; then
+          if echo "$LABEL_LIST" | grep -q "release:major"; then
             MAJOR=$((MAJOR + 1))
             MINOR=0
             PATCH=0
-          elif [ $MINOR_BUMP -gt 0 ]; then
+          elif echo "$LABEL_LIST" | grep -q "release:minor"; then
             MINOR=$((MINOR + 1))
             PATCH=0
-          else 
+          else
             PATCH=$((PATCH + 1))
           fi
 
           NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
-          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
           echo "New version: $NEW_VERSION"
 
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+
+      ############################################################
+      # 3. Build & Push Image via Jib
+      ############################################################
       - name: Build & Push Release Image (Jib)
+        env:
+          NEW_VERSION: ${{ steps.bump.outputs.NEW_VERSION }}
+          GHCR_PAT: ${{ secrets.GHCR_PAT }}
         run: |
           IMAGE="ghcr.io/mut-ink/mut-ink-test:${NEW_VERSION}"
+          IMAGE_LATEST="ghcr.io/mut-ink/mut-ink-test:latest"
+
           mvn -B package -Pghcr-push -Dmaven.test.skip=true \
             -Djib.to.image="$IMAGE" jib:build \
             -Djib.to.auth.username="${{ github.actor }}" \
-            -Djib.to.auth.password="${{ secrets.GHCR_PAT }}"
-          IMAGE_LATEST="ghcr.io/mut-ink/mut-ink-test:latest"
+            -Djib.to.auth.password="$GHCR_PAT"
+
           mvn -B package -Pghcr-push -Dmaven.test.skip=true \
             -Djib.to.image="$IMAGE_LATEST" jib:build \
             -Djib.to.auth.username="${{ github.actor }}" \
-            -Djib.to.auth.password="${{ secrets.GHCR_PAT }}"
-          
-
-
+            -Djib.to.auth.password="$GHCR_PAT"
