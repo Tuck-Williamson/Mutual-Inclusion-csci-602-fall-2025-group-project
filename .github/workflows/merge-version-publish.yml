@@ -16,7 +16,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
 
       - name: Setup JDK
         uses: actions/setup-java@v4
@@ -28,23 +28,26 @@ jobs:
         id: version
         env:
           GH_TOKEN: ${{ secrets.GHCR_PAT }}
-        run: | 
+        run: |
           LATEST=$(gh api -H "Accept: application/vnd.github+json" \
-                  /orgs/mut-ink/packages/container/mut-ink-test/versions \
-                  | jq -r '.[] | .metadata.container.tags[] | select(test("^[0-9]+\\.[0-9]+\\.[0-9]+$"))' \
-                  | sort -V | tail -n1)
-          if [ -z $LATEST ]; then
+            /orgs/mut-ink/packages/container/mut-ink-test/versions \
+            | jq -r '.[] | .metadata.container.tags[] | select(test("^[0-9]+\.[0-9]+\.[0-9]+$"))' \
+            | sort -V | tail -n1)
+
+          if [ -z "$LATEST" ]; then
             LATEST="0.0.0"
           fi
-          echo "LATEST=$LATEST" >> $GITHUB_ENV
+
+          echo "LATEST=$LATEST" >> $GITHUB_OUTPUT
 
 
       - name: Determine New Version
         id: bump
         env:
-          LATEST: ${{ env.LATEST }}
+          LATEST: ${{ steps.version.outputs.LATEST }}
           PR_LABELS: ${{ toJson(github.event.pull_request.labels.*.name) }}
         run: |
+          echo "Current latest version is: $LATEST"
           LABEL_LIST=$(echo "$PR_LABELS" | jq -r '.[]' || true)
 
           IFS='.' read -r MAJOR MINOR PATCH <<< "$LATEST"
