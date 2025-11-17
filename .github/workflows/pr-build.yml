@@ -38,7 +38,7 @@ jobs:
         
       - name: Build & Push PR Image (Jib)
         run: |
-          IMAGE="ghcr.io/mut-ink/mut-ink:${{ steps.pr-tag.outputs.IMAGE_TAG }}"
+          IMAGE="ghcr.io/mut-ink/mut-ink-test:${{ steps.pr-tag.outputs.IMAGE_TAG }}"
           mvn -B package -Pghcr-push -Dmaven.test.skip=true -Djib.to.image="$IMAGE" jib:build \
             -Djib.to.auth.username="${{ github.actor }}" \
             -Djib.to.auth.password="${{ secrets.GHCR_PAT }}"
@@ -54,9 +54,9 @@ jobs:
           PR_NUMBER=${{ github.event.pull_request.number }}
           GH_TOKEN="${{ secrets.GHCR_PAT }}"
           gh api -H "Accept: application/vnd.github+json" \
-          /orgs/mut-ink/packages/container/mut-ink/versions \
+          /orgs/mut-ink/packages/container/mut-ink-test/versions \
           | jq -r '.[] | select(.metadata.container.tags[] | test("pr-'$PR_NUMBER'")) | .id' \
           | xargs -n1 -I {} gh api \
-            -X DELETE /orgs/mut-ink/packages/container/mut-ink/versions/{}
+            -X DELETE /orgs/mut-ink/packages/container/mut-ink-test/versions/{}
 
 

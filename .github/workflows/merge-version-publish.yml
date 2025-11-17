@@ -29,7 +29,7 @@ jobs:
       run: | 
         GH_TOKEN="${{ secrets.GHCR_PAT }}"
         LATEST=$(gh api -H "Accept: application/vnd.github+json" \
-                /orgs/mut-ink/packages/container/mut-ink/versions \
+                /orgs/mut-ink/packages/container/mut-ink-test/versions \
                 | jq -r '.[] | .metadata.container.tags[] | select(test("^[0-9]+\\.[0-9]+\\.[0-9]$"))' \
                 | sort -V | tail -n1)
         if [ -z $LATEST ]; then
@@ -65,12 +65,12 @@ jobs:
 
     - name: Build & Push Release Image (Jib)
       run: |
-        IMAGE="ghcr.io/mut-ink/mut-ink:${NEW_VERSION}"
+        IMAGE="ghcr.io/mut-ink/mut-ink-test:${NEW_VERSION}"
         mvn -B package -Pghcr-push -Dmaven.test.skip=true \
           -Djib.to.image="$IMAGE" jib:build \
           -Djib.to.auth.username="${{ github.actor }}" \
           -Djib.to.auth.password="${{ secrets.GHCR_PAT }}"
-        IMAGE_LATEST="ghcr.io/mut-ink/mut-ink:latest"
+        IMAGE_LATEST="ghcr.io/mut-ink/mut-ink-test:latest"
         mvn -B package -Pghcr-push -Dmaven.test.skip=true \
           -Djib.to.image="$IMAGE_LATEST" jib:build \
           -Djib.to.auth.username="${{ github.actor }}" \
