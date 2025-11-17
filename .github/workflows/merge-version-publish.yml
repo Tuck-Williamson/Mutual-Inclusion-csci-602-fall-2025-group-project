@@ -42,12 +42,6 @@ jobs:
           JSON=$(gh api -H "Accept: application/vnd.github+json" \
                   /orgs/mut-ink/packages/container/mut-ink-test/versions 2>/dev/null || echo "")
 
-
-          echo "JSON: $JSON"
-          echo "$JSON" | \
-          jq -r '.[] | .metadata.container.tags[] | select(test("\\d+\\.\\d+\\.\\d+"))' | \
-          sort -V | tail -n 1
-
           LATEST=$(echo "$JSON" \
             | jq -r '.[] | .metadata.container.tags[] | select(test("\\d+\\.\\d+\\.\\d+"))' \
             | sort -V | tail -n 1)
