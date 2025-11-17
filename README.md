@@ -182,3 +182,7 @@ To run the containerized application, use the following command:
 ```bash
 docker run -p 5001:5001 ghcr.io/mut-ink/mut-ink:latest
 ```
+
+#### Auto-Incrementing Version Tags
+
+* TODO: explain how this works!
