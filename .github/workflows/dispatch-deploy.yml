@@ -6,6 +6,7 @@ on:
 
 jobs:
   say-hello:
+    runs-on: ubuntu-latest
     steps:
       - name: Say Hello to my friend
         run: echo "Hello, World"
