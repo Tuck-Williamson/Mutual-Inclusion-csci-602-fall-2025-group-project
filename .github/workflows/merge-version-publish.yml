@@ -106,7 +106,7 @@ jobs:
             -Djib.to.auth.username="${{ github.actor }}" \
             -Djib.to.auth.password="$GHCR_PAT" \
             jib:build 
-          echo "DIGEST=$(cat target/jib-image.digest)" | tee /dev/tty >> $GITHUB_OUTPUT
+          echo "DIGEST=$(cat target/jib-image.digest)" >> $GITHUB_OUTPUT
 
 
       ############################################################
