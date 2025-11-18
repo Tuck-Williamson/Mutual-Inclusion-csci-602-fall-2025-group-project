@@ -1,25 +1,24 @@
-name: Merge to Master - Versioned Release
+name: Test Merge Deploy 
 
 on:
-  pull_request_target:
-    types: 
-      - closed
-
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to deploy'
+        default: 'master'
+        required: true
 jobs:
-  merge-build:
-    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'master'
+  build-deploy: 
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-
     steps:
-
       - name: Checkout merge commit safely
         uses: actions/checkout@v4
         with:
           # Ensures we build the actual merged code, not attacker PR code
-          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          ref: ${{ github.event.inputs.branch }}
           fetch-depth: 0
 
       - name: Setup JDK
