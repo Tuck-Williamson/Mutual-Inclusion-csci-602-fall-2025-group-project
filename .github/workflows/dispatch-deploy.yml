@@ -1,0 +1,11 @@
+name: Test Auto Deploy
+
+on:
+  workflow_dispatch:
+
+
+jobs:
+  say-hello:
+    steps:
+      - name: Say Hello to my friend
+        run: echo "Hello, World"
