@@ -11,7 +11,7 @@
 
     <groupId>edu.citadel</groupId>
     <artifactId>csci-602</artifactId>
-    <version>1.0.0</version>
+    <version>0.0.0</version>
 
     <name>MutInc</name>
     <description>The CSCI 602 project from team MutInk</description>

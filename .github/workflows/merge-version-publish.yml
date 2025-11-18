@@ -1,0 +1,126 @@
+name: Merge to Master - Versioned Release
+
+on:
+  pull_request_target:
+    types: 
+      - closed
+
+jobs:
+  merge-build:
+    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'master'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+
+      - name: Checkout merge commit safely
+        uses: actions/checkout@v4
+        with:
+          # Ensures we build the actual merged code, not attacker PR code
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          fetch-depth: 0
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: corretto
+          java-version: 17
+
+      ############################################################
+      # 1. Get Latest Version from GHCR
+      ############################################################
+      - name: Get Latest GHCR Semantic Version
+        id: version
+        env:
+          GH_TOKEN: ${{ secrets.GHCR_PAT }}   # MUST have read:packages
+          GITHUB_TOKEN: ${{ secrets.GHCR_PAT }}
+        run: |
+          echo "Fetching GHCR versions..."
+
+          JSON=$(gh api -H "Accept: application/vnd.github+json" \
+                  /orgs/mut-ink/packages/container/mut-ink/versions )
+
+
+          echo "$JSON" | \
+          jq -r '.[] | .metadata.container.tags[] | select(test("\\d+\\.\\d+\\.\\d+"))' | \
+          sort -V | tail -n 1
+
+          LATEST=$(echo "$JSON" \
+            | jq -r '.[] | .metadata.container.tags[] | select(test("\\d+\\.\\d+\\.\\d+"))' \
+            | sort -V | tail -n 1)
+
+          echo "Latest set to '$LATEST'"
+          if [ -z "$LATEST" ]; then
+            LATEST="0.0.0"
+          fi
+
+          echo "Latest GHCR version: $LATEST"
+          echo "LATEST=$LATEST" >> $GITHUB_OUTPUT
+
+
+      ############################################################
+      # 2. Compute NEW version based on PR labels
+      ############################################################
+      - name: Determine New Version
+        id: bump
+        env:
+          LATEST: ${{ steps.version.outputs.LATEST }}
+          PR_LABELS: ${{ toJson(github.event.pull_request.labels.*.name) }}
+        run: |
+          echo "Current latest version: $LATEST"
+          LABEL_LIST=$(echo "$PR_LABELS" | jq -r '.[]' || true)
+
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$LATEST"
+
+          if echo "$LABEL_LIST" | grep -q "release:major"; then
+            MAJOR=$((MAJOR + 1))
+            MINOR=0
+            PATCH=0
+          elif echo "$LABEL_LIST" | grep -q "release:minor"; then
+            MINOR=$((MINOR + 1))
+            PATCH=0
+          else
+            PATCH=$((PATCH + 1))
+          fi
+
+          NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          echo "New version: $NEW_VERSION"
+
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+
+      ############################################################
+      # 3. Build & Push Image via Jib
+      ############################################################
+      - name: Build & Push Release Image (Jib)
+        id: image
+        env:
+          NEW_VERSION: ${{ steps.bump.outputs.NEW_VERSION }}
+          GHCR_PAT: ${{ secrets.GHCR_PAT }}
+        run: |
+          mvn -B package -Pghcr-push -Dmaven.test.skip=true \
+            -Djib.to.image="ghcr.io/mut-ink/mut-ink" \
+            -Djib.to.tags="latest,$NEW_VERSION" \
+            -Djib.to.auth.username="${{ github.actor }}" \
+            -Djib.to.auth.password="$GHCR_PAT" \
+            jib:build 
+          echo "DIGEST=$(cat target/jib-image.digest)" | tee /dev/tty >> $GITHUB_OUTPUT
+
+
+      ############################################################
+      # 4. Deploy the Image to Digital Ocean 
+      ############################################################
+      - name: Deploy Image to Digital Ocean App Platform
+        env:
+          DO_API_TOKEN: ${{ secrets.DIGITAL_OCEAN_PAT }}
+          DO_APP_ID: ${{ secrets.DO_APP_ID }}
+          DIGEST: ${{ steps.image.outputs.DIGEST }}
+        run: |
+          doctl apps spec get $DO_APP_ID | \
+          yq --yaml-output --arg digest "$DIGEST" '
+          .services[0].image.digest = $digest |
+          .services[0].image.tag = null
+          ' - > do-spec.yaml
+          doctl apps update $DO_APP_ID --spec do-spec.yaml

@@ -1,0 +1,45 @@
+name: PR Preview Build
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - closed 
+
+jobs:
+  pr-build:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  
+
+      - name: Setup JDK 
+        uses: actions/setup-java@v4
+        with:
+          distribution: corretto
+          java-version: 17
+
+      - name: Compute PR Image Tag
+        id: pr-tag
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          SHORT_SHA=$(echo "${GITHUB_SHA}" | cut -c1-7)
+          IMAGE_TAG="pr-${PR_NUMBER}-${SHORT_SHA}"
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_OUTPUT
+        
+      - name: Build & Push PR Image (Jib)
+        run: |
+          IMAGE="ghcr.io/mut-ink/mut-ink:${{ steps.pr-tag.outputs.IMAGE_TAG }}"
+          mvn -B package -Pghcr-push -Dmaven.test.skip=true -Djib.to.image="$IMAGE" jib:build \
+            -Djib.to.auth.username="${{ github.actor }}" \
+            -Djib.to.auth.password="${{ secrets.GHCR_PAT }}"
+
