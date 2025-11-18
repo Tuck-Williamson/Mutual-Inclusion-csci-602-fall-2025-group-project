@@ -7,7 +7,7 @@ on:
 
 jobs:
   merge-build:
-    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'test-master'
+    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'master'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -40,7 +40,7 @@ jobs:
           echo "Fetching GHCR versions..."
 
           JSON=$(gh api -H "Accept: application/vnd.github+json" \
-                  /orgs/mut-ink/packages/container/mut-ink-test/versions )
+                  /orgs/mut-ink/packages/container/mut-ink/versions )
 
 
           echo "$JSON" | \
@@ -99,8 +99,8 @@ jobs:
           NEW_VERSION: ${{ steps.bump.outputs.NEW_VERSION }}
           GHCR_PAT: ${{ secrets.GHCR_PAT }}
         run: |
-          IMAGE="ghcr.io/mut-ink/mut-ink-test:${NEW_VERSION}"
-          IMAGE_LATEST="ghcr.io/mut-ink/mut-ink-test:latest"
+          IMAGE="ghcr.io/mut-ink/mut-ink:${NEW_VERSION}"
+          IMAGE_LATEST="ghcr.io/mut-ink/mut-ink:latest"
 
           mvn -B package -Pghcr-push -Dmaven.test.skip=true \
             -Djib.to.image="$IMAGE" jib:build \

@@ -38,7 +38,7 @@ jobs:
         
       - name: Build & Push PR Image (Jib)
         run: |
-          IMAGE="ghcr.io/mut-ink/mut-ink-test:${{ steps.pr-tag.outputs.IMAGE_TAG }}"
+          IMAGE="ghcr.io/mut-ink/mut-ink:${{ steps.pr-tag.outputs.IMAGE_TAG }}"
           mvn -B package -Pghcr-push -Dmaven.test.skip=true -Djib.to.image="$IMAGE" jib:build \
             -Djib.to.auth.username="${{ github.actor }}" \
             -Djib.to.auth.password="${{ secrets.GHCR_PAT }}"
