@@ -119,8 +119,7 @@ jobs:
           DIGEST: ${{ steps.image.outputs.DIGEST }}
         run: |
           doctl apps spec get $DO_APP_ID | \
-          yq --yaml-output --arg digest "$DIGEST" '
-          .services[0].image.digest = $digest |
-          .services[0].image.tag = null
-          ' - > do-spec.yaml
+          yq  '
+          .services[0].image.digest = env(DIGEST) 
+          '  > do-spec.yaml
           doctl apps update $DO_APP_ID --spec do-spec.yaml
