@@ -108,6 +108,10 @@ jobs:
             jib:build 
           echo "DIGEST=$(cat target/jib-image.digest)" >> $GITHUB_OUTPUT
 
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 
       ############################################################
       # 4. Deploy the Image to Digital Ocean 
