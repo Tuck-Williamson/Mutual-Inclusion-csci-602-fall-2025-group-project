@@ -22,19 +22,11 @@ spring:
       client:
         registration:
           github:
-            client-id: ${OAUTH_GITHUB_CLIENT_ID_LOCAL}
+            client-id: ${OAUTH_GITHUB_CLIENT_ID_LOCAL:your-client-id}
             client-secret: ${OAUTH_GITHUB_SECRET_LOCAL}
-        #     authorization-grant-type: authorization_code
-        #     redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
-        #     scope: 
-        #       - read:user 
-        #       - user:email
-        # provider:
-        #   github:
-        #     authorization-uri: https://github.com/login/oauth/authorize
-        #     token-uri: https://github.com/login/oauth/access_token
-        #     user-info-uri: https://api.github.com/user
-        #     user-name-attribute: id
+            scope:
+              - read:user
+              - user:email
   ## Allows you to go to ${BASE_URL}/h2-console to inspect db
   h2:
     console:
