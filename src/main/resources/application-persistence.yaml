@@ -1,6 +1,13 @@
 
 ### Override the datasource to use Postgres for persistence profile ###
 spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: ${OAUTH_GITHUB_CLIENT_ID}
+            client-secret: ${OAUTH_GITHUB_SECRET}
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}

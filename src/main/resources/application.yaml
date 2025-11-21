@@ -17,6 +17,13 @@ management:
 server:
   port: 5001
 spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: ${OAUTH_GITHUB_CLIENT_ID_LOCAL:local-client-id}
+            client-secret: ${OAUTH_GITHUB_SECRET_LOCAL:local-client-secret}
   ## Allows you to go to ${BASE_URL}/h2-console to inspect db
   h2:
     console:
