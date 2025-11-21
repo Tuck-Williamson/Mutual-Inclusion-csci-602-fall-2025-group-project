@@ -37,7 +37,8 @@ public class SecurityConfig {
                         .defaultSuccessUrl("/", true))
                 .exceptionHandling(e ->
                        e.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
-                .csrf(AbstractHttpConfigurer::disable);
+                .csrf(AbstractHttpConfigurer::disable).logout(
+                        logout -> logout.logoutSuccessUrl("/").permitAll());// TODO: Adjust logout URL as needed
         return http.build();
     }
 }

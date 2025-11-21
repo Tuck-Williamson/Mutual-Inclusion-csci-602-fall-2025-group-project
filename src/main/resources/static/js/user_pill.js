@@ -32,18 +32,33 @@ const UserPill = ({ navigate }) => {
       })
   }, []);
 
-  const handleClick = () => {
-      console.debug("click! isLoggedIn:", isLoggedIn);
-    if (isLoggedIn) {
-      navigate("account");// TODO: Build out the account page
-    } else {
-      window.location.href = "/oauth2/authorization/github";
+  const checkLogin = () => {
+      return isLoggedIn && username !== "Guest";
     }
+
+  const handleLogout = async () => {
+    console.log("Logging out...");
+    await fetch('/logout', {
+        method: 'POST',
+        headers: {
+            // May want to add CSRF token here if enabled
+            // 'X-CSRF-TOKEN': getCsrfToken(),
+            'Content-Type': 'application/json'
+        },
+        // No body needed for logout
+    });
+    window.location.reload();// TODO: Better way to update UI after logout?
   }
-  
+
+  const authorizeWithGithub = () => {
+     console.log("Authorizing with GitHub...");
+    // This is all we really need to do for an SPA
+    window.location.href = "/oauth2/authorization/github";
+  }
+
     return html`
         <button
-            onClick="${handleClick}"
+            onClick="${ checkLogin() ? handleLogout : authorizeWithGithub }"
             id="username-pill"
             class="px-4 py-1.5 rounded-full shadow-lg text-white
                text-sm font-semibold
