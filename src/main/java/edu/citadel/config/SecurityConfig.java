@@ -26,6 +26,12 @@ public class SecurityConfig {
                                       "/accounts/**",
                                       "/favicon/ico" )
                               .permitAll()
+                              .requestMatchers(
+                                      // TODO: Add way for front-end to access these endpoints without authentication
+                                      "/api/user",
+                                      "/ws/**",
+                                      "/list/**"
+                              ).permitAll()
                                 .anyRequest().authenticated())
                 .oauth2Login(oauth2 -> oauth2
                         .defaultSuccessUrl("/", true))

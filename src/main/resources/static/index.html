@@ -31,7 +31,8 @@
             "account": "/js/account.js",
             "list-detail": "/js/list_detail.js",
             "modal": "/js/modal.js",
-            "websocket": "/js/web_socket_list_manager.js"
+            "websocket": "/js/web_socket_list_manager.js",
+            "user-pill": "/js/user_pill.js"
           }
         }
     </script>
@@ -47,16 +48,16 @@
 <body class="min-h-screen bg-gradient-to-br from-indigo-400 to-purple-600 text-gray-900">
 
 <!-- USERNAME PILL -->
-<div class="fixed top-4 right-4 z-50">
-    <button
-            id="username-pill"
-            class="px-4 py-1.5 rounded-full shadow-lg bg-blue-600 text-white
-               text-sm font-semibold
-               lg:px-6 lg:py-2 lg:text-base
-               hover:bg-blue-700 transition">
-        <i class="fa-solid fa-user mr-2"></i> Username
-    </button>
-</div>
+<!-- <div class="fixed top-4 right-4 z-50"> -->
+<!--     <button -->
+<!--             id="username-pill" -->
+<!--             class="px-4 py-1.5 rounded-full shadow-lg bg-blue-600 text-white -->
+<!--                text-sm font-semibold -->
+<!--                lg:px-6 lg:py-2 lg:text-base -->
+<!--                hover:bg-blue-700 transition"> -->
+<!--         <i class="fa-solid fa-user mr-2"></i> Username -->
+<!--     </button> -->
+<!-- </div> -->
 
 <div id="app" class="w-full"></div>
 
@@ -81,6 +82,7 @@
     import ListsPage from "lists";
     import AccountPage from "account";
     import ListDetailPage from "list-detail";
+    import UserPill from "user-pill";
 
     const App = () => {
         const [page, setPage] = useState("lists");
@@ -96,12 +98,6 @@
             setPage(p);
         };
 
-        // document.getElementById("username-pill").onclick = () => navigate("account");
-      document.getElementById("username-pill").onclick = () =>{
-        // Maybe fancier routing here?
-        window.location.href = "/oauth2/authorization/github";
-      }; 
-
         let content;
         if (page === "lists") {
             content = html`<${ListsPage} navigate=${navigate} />`;
@@ -114,6 +110,9 @@
         }
 
         return html`
+            <div class="fixed top-4 right-4 z-50">
+              <${UserPill} navigate=${navigate} />
+            </div>
             <div class="mx-auto max-w-4xl bg-white shadow-2xl rounded-2xl
                         mt-16 p-6 sm:p-8 lg:p-12">
                 ${content}
