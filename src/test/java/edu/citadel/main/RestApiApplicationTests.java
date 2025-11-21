@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -16,8 +17,15 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * Integration tests for the REST API application.
+ * Uses MockMvc to simulate HTTP requests and validate responses.
+ * Tests cover status endpoints and list/list item operations.
+ * TODO: Add OAuth2 security tests once implemented.
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
+@WithMockUser(username = "testUser", roles = {"USER"})// mocking a user for security context
 public class RestApiApplicationTests {
 
     @Value("${info.app.name}")

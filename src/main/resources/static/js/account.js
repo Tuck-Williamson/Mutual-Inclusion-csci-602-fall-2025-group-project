@@ -2,7 +2,9 @@ const { h, render, Component } = preact;
 const { useState, useEffect } = preactHooks;
 const html = htm.bind(h);
 
+
 const AccountPage = ({ navigate }) => {
+  // TODO: make this navigate to grab an actual account
     const [account, setAccount] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
 

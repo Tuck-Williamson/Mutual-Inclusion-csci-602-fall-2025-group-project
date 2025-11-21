@@ -96,7 +96,11 @@
             setPage(p);
         };
 
-        document.getElementById("username-pill").onclick = () => navigate("account");
+        // document.getElementById("username-pill").onclick = () => navigate("account");
+      document.getElementById("username-pill").onclick = () =>{
+        // Maybe fancier routing here?
+        window.location.href = "/oauth2/authorization/github";
+      }; 
 
         let content;
         if (page === "lists") {
