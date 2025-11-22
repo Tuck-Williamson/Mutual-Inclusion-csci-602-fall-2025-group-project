@@ -17,6 +17,8 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(authorize ->
                       authorize
+                              .requestMatchers("/oauth2/**").permitAll()
+                              .requestMatchers("/login/**").permitAll()
                               .requestMatchers("/",
                                       "/index.html",
                                       "/js/**",
