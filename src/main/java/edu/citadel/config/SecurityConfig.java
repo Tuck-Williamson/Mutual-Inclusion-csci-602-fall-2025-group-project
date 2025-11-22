@@ -36,7 +36,9 @@ public class SecurityConfig {
                               ).permitAll()
                                 .anyRequest().authenticated())
                 .oauth2Login(oauth2 -> oauth2
-                        .defaultSuccessUrl("/", true))
+                        .defaultSuccessUrl("/", true)
+                        .failureUrl("/?error=auth_failed")
+                )
                 .exceptionHandling(e ->
                        e.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .csrf(AbstractHttpConfigurer::disable).logout(
