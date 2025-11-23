@@ -1,6 +1,7 @@
 const { h } = preact;
 const { useState, useEffect } = preactHooks;
 const html = htm.bind(h);
+import {getCookie} from  './utils/cookie.js';
 
 
 const UserPill = ({ navigate }) => {
@@ -9,8 +10,8 @@ const UserPill = ({ navigate }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
 
- useEffect(() => {
-    fetch('/api/user')
+ useEffect(async () => {
+    await fetch('/api/user')
       .then(response => {
         if (response.ok) {
           return response.json();
@@ -22,6 +23,7 @@ const UserPill = ({ navigate }) => {
       })
       .then(data => {
         if (data && data.name /*TODO: can we use data?.name for brevity? */) {
+            console.log("User is logged in as:", data);
           setUsername(data.name);
           setIsLoggedIn(true);
         }
@@ -37,17 +39,29 @@ const UserPill = ({ navigate }) => {
     }
 
   const handleLogout = async () => {
+      const csrfToken = getCookie('XSRF-TOKEN');
+      console.log("CSRF token: " + csrfToken);
     console.log("Logging out...");
     await fetch('/logout', {
         method: 'POST',
         headers: {
             // May want to add CSRF token here if enabled
-            // 'X-CSRF-TOKEN': getCsrfToken(),
+            'X-XSRF-TOKEN': csrfToken,
             'Content-Type': 'application/json'
         },
         // No body needed for logout
+        credentials: 'include' // Include cookies,
+    }).then(response => {
+        console.log("Logout response: ", response);
+        if (response.ok) {
+            console.log("Logout successful.");
+            setIsLoggedIn(false);
+            setUsername("Guest");
+            window.location.reload();// TODO: Better way to update UI after logout?
+        }
+    }).catch(error => {
+        console.error("Error during logout:", error);
     });
-    window.location.reload();// TODO: Better way to update UI after logout?
   }
 
   const authorizeWithGithub = () => {

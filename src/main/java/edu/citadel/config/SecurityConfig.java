@@ -1,5 +1,6 @@
 package edu.citadel.config;
 
+import edu.citadel.security.CustomCsrfTokenRequestHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -8,6 +9,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 @Configuration
 @EnableWebSecurity
@@ -18,7 +20,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize ->
                       authorize
                               .requestMatchers("/oauth2/**").permitAll()
-                              .requestMatchers("/login/**").permitAll()
+                              .requestMatchers("/login/**", "/logout/**").permitAll()
                               .requestMatchers("/",
                                       "/index.html",
                                       "/js/**",
@@ -41,7 +43,10 @@ public class SecurityConfig {
                 )
                 .exceptionHandling(e ->
                        e.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
-                .csrf(AbstractHttpConfigurer::disable).logout(
+                .csrf(csrf -> csrf
+                                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                                .csrfTokenRequestHandler(new CustomCsrfTokenRequestHandler())
+                ).logout(
                         logout -> logout.logoutSuccessUrl("/").permitAll());// TODO: Adjust logout URL as needed
         return http.build();
     }
