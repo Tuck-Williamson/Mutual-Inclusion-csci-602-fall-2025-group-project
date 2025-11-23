@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -39,5 +40,10 @@ public class ListEntity {
     @OneToMany(mappedBy = "list")
     private Set<ListItemEntity> listItems = new LinkedHashSet<>();
 
+    @Size(max = 50)
+    @NotNull
+    @JsonIgnore
+    @Column(name = "OWNER_USERNAME", nullable = false, length = 50)
+    private String ownerUsername;
 
 }
