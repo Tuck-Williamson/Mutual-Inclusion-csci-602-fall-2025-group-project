@@ -2,6 +2,7 @@
 ### Override the datasource to use Postgres for persistence profile ###
 logging:
   level:
+    org.springframework.security.oauth2: DEBUG
     org.springframework.security: DEBUG
     org.springframework.web: DEBUG
 server:
