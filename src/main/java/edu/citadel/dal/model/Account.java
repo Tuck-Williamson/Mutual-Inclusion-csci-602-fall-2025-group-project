@@ -17,7 +17,7 @@ public class Account {
   @GeneratedValue(strategy= GenerationType.IDENTITY)
   private Long user_id;
   private String username;
-  private String password;
+//  private String password;
   private String email;
   @CreationTimestamp
   private Timestamp created_on;

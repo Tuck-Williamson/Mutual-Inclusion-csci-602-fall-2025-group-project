@@ -40,10 +40,11 @@ public class ListEntity {
     @OneToMany(mappedBy = "list")
     private Set<ListItemEntity> listItems = new LinkedHashSet<>();
 
-    @Size(max = 50)
-    @NotNull
-    @JsonIgnore
-    @Column(name = "OWNER_USERNAME", nullable = false, length = 50)
-    private String ownerUsername;
+//    @Size(max = 50)
+//    @NotNull
+//    @JsonIgnore
+//    @Column(name = "OWNER_USERNAME", nullable = false, length = 50)
+    @Transient
+    private String ownerUsername = "Guest";
 
 }
