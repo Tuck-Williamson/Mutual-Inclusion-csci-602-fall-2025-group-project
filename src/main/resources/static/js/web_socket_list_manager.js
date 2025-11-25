@@ -51,7 +51,7 @@ export function subscribeToList(listId, callback) {
     if (!isConnected()) {
         console.error('WebSocket not connected. Call initWebSocket() first.');
         // TODO: Maybe do better error handling here? Throw an error?
-        showNotification("Error: WebSocket not connected. Please refresh the page.");
+        showNotification("Error: WebSocket not connected. Developer error!!! Danger Will Robinson!!1111one.");
         return () => {};
     }
 

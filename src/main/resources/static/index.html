@@ -154,7 +154,7 @@
             }
 
             window.onpopstate = (event) => {
-                if (event.state) {
+                if (event.state?.page && event.state?.list) {
                     navigate(event.state.page, event.state.list);
                 } else {
                     navigate("lists");
