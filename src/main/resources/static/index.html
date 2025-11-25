@@ -113,6 +113,10 @@
                 setCurrentList(data);
             }
             setPage(p);
+            let validPages = ["lists", "account", "list-detail", "share"];
+
+            const state = {page: validPages.includes(p) ? p : "lists", list: data};
+            window.history.pushState(state, '', window.location.pathname + '?p=' + p + (data?.list ? `&v=${data.list.id}` : ''));
         };
 
         let content;
@@ -122,19 +126,41 @@
         if (page === "account") {
             content = html`<${AccountPage} navigate=${navigate} />`;
         }
-        if (page === "list-detail" && currentList) {
-            content = html`<${ListDetailPage} list=${currentList} navigate=${navigate} />`;
-        }
         if (page === "share" && currentList) {
             content = html`<${ShareList} list=${currentList} navigate=${navigate} />`;
         }
+        if (page === "list-detail" && currentList) {
+            content = html`<${ListDetailPage} list=${currentList} navigate=${navigate} />`;
+        }
+
 
         useEffect(() => {
+            async function fetchListForPage(listId, page = "share") {
+                const response = await fetch(`/list/${listId}`);
+                if (!response.ok) {
+                    showNotification("Error fetching list: " + response.statusText);
+                    return;
+                }
+                const list = await response.json();
+                navigate(page, {list: list});
+            }
+
             if (share && v) {
                 // Todo show share page.
+                fetchListForPage(v, "share");
             } else if (v) {
                 // Todo show list page.
+                fetchListForPage(v, "list-detail");
             }
+
+            window.onpopstate = (event) => {
+                if (event.state) {
+                    navigate(event.state.page, event.state.list);
+                } else {
+                    navigate("lists");
+                }
+            };
+
             // This is needed to remove the query params from the URL after navigation.
             // Otherwise, the user will continue to get redirected to the same page with the params.
             window.history.pushState({}, '', window.location.pathname);
@@ -154,7 +180,7 @@
     };
 
     render(html`<${App} />`, document.getElementById("app"));
-
+    
 </script>
 
 </body>
