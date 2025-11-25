@@ -1,5 +1,7 @@
 package edu.citadel.config;
 
+import edu.citadel.api.service.MutInkOAuth2AccountService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -13,6 +15,9 @@ import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    @Autowired
+    MutInkOAuth2AccountService accountService;
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
@@ -46,6 +51,8 @@ public class SecurityConfig {
                               ).permitAll()
                                 .anyRequest().authenticated())
                 .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo ->
+                                userInfo.userService(accountService))
                         .defaultSuccessUrl("/", true))
                 .exceptionHandling(e ->
                        e.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
