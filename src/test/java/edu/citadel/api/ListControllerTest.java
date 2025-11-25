@@ -13,6 +13,9 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+
 
 import java.sql.Timestamp;
 import java.util.Optional;
@@ -41,6 +44,12 @@ class ListControllerTest {
         instance = new ListController(mockListEntityRepository, mockListItemEntityRepository, mockUpdateListRequest);
     }
 
+    private OAuth2User mockPrincipal(String username) {
+        OAuth2User principal = Mockito.mock(OAuth2User.class);
+        Mockito.when(principal.getAttribute("login")).thenReturn(username);
+        return principal;
+    }
+
     @Test
     void createList_HappyPath() {
         Timestamp mockedTimestamp = Timestamp.valueOf("1234-01-01 00:00:00");
@@ -51,14 +60,18 @@ class ListControllerTest {
                     arg.setCreatedOn(mockedTimestamp); // Set the mocked timestamp
                     return arg;
                 });
-        ListEntity result = instance.createList(null).getBody();
+        OAuth2User principal = mockPrincipal("testUser");
+        ResponseEntity<ListEntity> response = instance.createList(null, principal);
+        ListEntity result = response.getBody();
         assertNotNull(result);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(1L, result.getId());
         assertEquals("New List", result.getTitle());
         assertEquals(mockedTimestamp, result.getCreatedOn());
         assertNull(result.getCompletedOn());
         assertNotNull(result.getListItems());
         assertTrue(result.getListItems().isEmpty());
+        assertEquals("testUser", result.getOwnerUsername());
     }
 
     @Test
@@ -73,19 +86,21 @@ class ListControllerTest {
                     return arg;
                 });
 
-        // ✅ Use the new DTO instead of a Map
         CreateListRequest body = new CreateListRequest();
         body.setTitle("Weekend Tasks");
-
-        ListEntity result = instance.createList(body).getBody();
+        OAuth2User principal = mockPrincipal("testUser2");
+        ResponseEntity<ListEntity> response = instance.createList(body, principal);
+        ListEntity result = response.getBody();
 
         assertNotNull(result);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(2L, result.getId());
         assertEquals("Weekend Tasks", result.getTitle());
         assertEquals(mockedTimestamp, result.getCreatedOn());
         assertNull(result.getCompletedOn());
         assertNotNull(result.getListItems());
         assertTrue(result.getListItems().isEmpty());
+        assertEquals("testUser2", result.getOwnerUsername());
     }
 
 
@@ -101,18 +116,20 @@ class ListControllerTest {
                     return arg;
                 });
 
-        // ✅ Body with no title
         CreateListRequest body = new CreateListRequest();
-
-        ListEntity result = instance.createList(body).getBody();
+        OAuth2User principal = mockPrincipal("testUser3");
+        ResponseEntity<ListEntity> response = instance.createList(body, principal);
+        ListEntity result = response.getBody();
 
         assertNotNull(result);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(3L, result.getId());
         assertEquals("New List", result.getTitle()); // Default
         assertEquals(mockedTimestamp, result.getCreatedOn());
         assertNull(result.getCompletedOn());
         assertNotNull(result.getListItems());
         assertTrue(result.getListItems().isEmpty());
+        assertEquals("testUser3", result.getOwnerUsername());
     }
 
 
@@ -128,19 +145,21 @@ class ListControllerTest {
                     return arg;
                 });
 
-        // ✅ Body with blank title
         CreateListRequest body = new CreateListRequest();
         body.setTitle("   ");
-
-        ListEntity result = instance.createList(body).getBody();
+        OAuth2User principal = mockPrincipal("testUser4");
+        ResponseEntity<ListEntity> response = instance.createList(body, principal);
+        ListEntity result = response.getBody();
 
         assertNotNull(result);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(4L, result.getId());
         assertEquals("New List", result.getTitle()); // Default still applies
         assertEquals(mockedTimestamp, result.getCreatedOn());
         assertNull(result.getCompletedOn());
         assertNotNull(result.getListItems());
         assertTrue(result.getListItems().isEmpty());
+        assertEquals("testUser4", result.getOwnerUsername());
     }
 
 

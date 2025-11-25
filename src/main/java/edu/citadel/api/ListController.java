@@ -16,6 +16,9 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+
 
 import java.time.Instant;
 import java.util.*;
@@ -42,20 +45,45 @@ public class ListController {
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<ListEntity>> getAllLists() {
-        return ResponseEntity.ok(listEntityRepository.findAll());
+    public ResponseEntity<List<ListEntity>> getAllLists(@AuthenticationPrincipal OAuth2User principal
+    ) {
+        String username = "Guest";
+
+        if (principal != null) {
+            String login = principal.getAttribute("login");
+            if (login != null && !login.isBlank()) {
+                username = login;
+            }
+        }
+
+        List<ListEntity> userLists = listEntityRepository.findByOwnerUsername(username);
+        return ResponseEntity.ok(userLists);
     }
 
     @PostMapping(
             produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<ListEntity> createList(@RequestBody(required = false) CreateListRequest body) {
+    public ResponseEntity<ListEntity> createList(
+            @RequestBody(required = false) CreateListRequest body,
+            @AuthenticationPrincipal OAuth2User principal
+    ) {
+        String username = "Guest";
+
+        if (principal != null) {
+            String login = principal.getAttribute("login");
+            if (login != null && !login.isBlank()) {
+                username = login;
+            }
+        }
+
         ListEntity list = new ListEntity();
 
         if (body != null && body.getTitle() != null && !body.getTitle().isBlank()) {
             list.setTitle(body.getTitle());
         }
+
+        list.setOwnerUsername(username);
 
         ListEntity savedList = listEntityRepository.save(list);
         listUpdatePublisher.publishListCreated(savedList);
