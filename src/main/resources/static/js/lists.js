@@ -44,6 +44,8 @@ const ListsPage = ({ navigate }) => {
     const openDeleteModal = (list) => setDeleteTarget(list);
     const cancelDelete = () => setDeleteTarget(null);
 
+    const openShareModal = (list) => {navigate('share', { list })}
+
     const confirmDelete = () => {
         if (!deleteTarget) return;
         fetch(`/list/${deleteTarget.id}`, { method: "DELETE" })
@@ -141,7 +143,7 @@ const ListsPage = ({ navigate }) => {
 
                                     <div class="flex items-center gap-2 ml-4 flex-shrink-0">
                                         <button class="w-8 h-8 rounded-md bg-blue-500 text-white shadow hover:bg-blue-600"
-                                                onClick=${e => e.stopPropagation()}>
+                                                onClick=${e => {e.stopPropagation(); openShareModal(list); }}>
                                             <i class="fa-solid fa-share-nodes"></i>
                                         </button>
 
