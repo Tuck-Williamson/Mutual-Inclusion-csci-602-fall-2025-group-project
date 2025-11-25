@@ -9,7 +9,11 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.ActiveProfiles;
+
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oauth2Login;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -221,7 +225,124 @@ public class RestApiApplicationTests {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.completedOn").doesNotExist());
     }
 
+    @Test
+    public void testInvalidListShare() throws Exception {
+        // Create a new list to then delete so that we know the list id is not valid.
+        ResultActions postListResult = mockMvc
+                .perform(MockMvcRequestBuilders.post("/list")
+                        .with(oauth2Login().attributes(attrs -> attrs.put("login", "one")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"Shared List\"}"))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Integer listId = JsonPath.read(postListResult.andReturn().getResponse().getContentAsString(), "$.id");
 
+        // Try and share the list without a user.
+        mockMvc.perform(MockMvcRequestBuilders.post("/list/" + listId + "/share"))
+            .andExpect(MockMvcResultMatchers.status().isUnauthorized());
+
+        // Try and share the list with a bad user.
+        mockMvc.perform(MockMvcRequestBuilders.post("/list/" + listId + "/share")
+                        .with(oauth2Login()))
+                .andExpect(MockMvcResultMatchers.status().isUnauthorized());
+
+
+        // Try and share the list with a non-owner user.
+        // Todo: Uncomment the following when the DB stuff for users has been added.
+//        mockMvc.perform(MockMvcRequestBuilders.post("/list/" + listId + "/share")
+//                .with(oauth2Login().attributes(attrs -> attrs.put("login", "two")))
+//        ).andExpect(MockMvcResultMatchers.status().isUnauthorized());
+
+        ResultActions deleteListResult = mockMvc.perform(MockMvcRequestBuilders.delete("/list/" + listId)
+                        .with(oauth2Login().attributes(attrs -> attrs.put("login", "one"))))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+        // Now try and share the deleted list
+        mockMvc.perform(MockMvcRequestBuilders.post("/list/" + listId + "/share")
+                .with(oauth2Login().attributes(attrs -> attrs.put("login", "one")))
+        ).andExpect(MockMvcResultMatchers.status().isNotFound());
+
+        // Test bad accept link
+        mockMvc.perform(MockMvcRequestBuilders.get("/list/accept/badtoken")
+                        .with(oauth2Login().attributes(attrs -> attrs.put("login", "one"))))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+
+        // Test delete with no user
+        mockMvc.perform(MockMvcRequestBuilders.delete("/list/share/badtoken"))
+                .andExpect(MockMvcResultMatchers.status().isUnauthorized());
+
+    }
+
+    @Test
+    public void testShareListAndDelete() throws Exception {
+        // Create a new list first
+        ResultActions postListResult = mockMvc
+                .perform(MockMvcRequestBuilders.post("/list")
+                        .with(oauth2Login().attributes(attrs -> attrs.put("login", "one")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"Shared List\"}"))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        Integer listId = JsonPath.read(postListResult.andReturn().getResponse().getContentAsString(), "$.id");
+
+        ResultActions shareListResult = mockMvc.perform(MockMvcRequestBuilders.post("/list/" + listId + "/share")
+                        .with(oauth2Login().attributes(attrs -> attrs.put("login", "one"))))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.token").isNotEmpty())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.expiryTime").isNotEmpty())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.link").isNotEmpty());
+
+        String shareLink = "/" + JsonPath.read(shareListResult.andReturn().getResponse().getContentAsString(), "$.link");
+        String token = JsonPath.read(shareListResult.andReturn().getResponse().getContentAsString(), "$.token");
+
+        // Test link redirects
+
+        // With no user has an error message.
+        mockMvc.perform(MockMvcRequestBuilders.get(shareLink))
+                .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
+                .andExpect(MockMvcResultMatchers.redirectedUrlPattern("/?error=**"));
+
+        // With the owner user has redirected to the list share page.
+        mockMvc.perform(MockMvcRequestBuilders.get(shareLink)
+                        .with(oauth2Login().attributes(attrs -> attrs.put("login", "one"))))
+                .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
+                .andExpect(MockMvcResultMatchers.redirectedUrlPattern("/?v=" + listId + "&share=true"));
+
+        // With a new user has redirection to the list page.
+        mockMvc.perform(MockMvcRequestBuilders.get(shareLink)
+                        .with(oauth2Login().attributes(attrs -> attrs.put("login", "two"))))
+                .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
+                .andExpect(MockMvcResultMatchers.redirectedUrlPattern("/?v=" + listId + "&note=**"));
+
+        // Now ensure that the list cannot be re-shared from the same token.
+        // Todo: Uncomment the following when the DB stuff for users has been added.
+//        mockMvc.perform(MockMvcRequestBuilders.post("/list/" + listId + "/share")
+//                .with(userOne))
+//                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/list/share/" + token)
+                .with(oauth2Login().attributes(attrs -> attrs.put("login", "one"))))
+                .andExpect(MockMvcResultMatchers.status().isFound());
+
+        // Now check and make sure that the share can be rejected.
+        shareListResult = mockMvc.perform(MockMvcRequestBuilders.post("/list/" + listId + "/share")
+                        .with(oauth2Login().attributes(attrs -> attrs.put("login", "one"))))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.token").isNotEmpty())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.expiryTime").isNotEmpty())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.link").isNotEmpty());
+
+        shareLink = "/" + JsonPath.read(shareListResult.andReturn().getResponse().getContentAsString(), "$.link");
+        token = JsonPath.read(shareListResult.andReturn().getResponse().getContentAsString(), "$.token");
+
+        mockMvc.perform(MockMvcRequestBuilders.get(shareLink)
+                        .with(oauth2Login().attributes(attrs -> attrs.put("login", "two"))))
+                .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
+                .andExpect(MockMvcResultMatchers.redirectedUrlPattern("/?v=" + listId + "&note=**"));
+
+        // test deleting the share with the non-owner.
+        mockMvc.perform(MockMvcRequestBuilders.delete("/list/share/" + token)
+                        .with(oauth2Login().attributes(attrs -> attrs.put("login", "two"))))
+                .andExpect(MockMvcResultMatchers.status().isFound());
+    }
 
 }
 
