@@ -1,8 +1,16 @@
 package edu.citadel.main;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
+import edu.citadel.dal.AccountRepository;
 import edu.citadel.dal.ListItemEntityRepository;
+import edu.citadel.dal.model.Account;
+import edu.citadel.dal.model.Login;
+import edu.citadel.dal.model.LoginProvider;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -15,6 +23,13 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
+import java.lang.reflect.Modifier;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -27,6 +42,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @AutoConfigureMockMvc
 @WithMockUser(username = "testUser", roles = {"USER"})// mocking a user for security context
 public class RestApiApplicationTests {
+
+    private static final Logger logger =
+            LoggerFactory.getLogger(RestApiApplicationTests.class);
 
     @Value("${info.app.name}")
     private String applicationName;
@@ -43,8 +61,75 @@ public class RestApiApplicationTests {
     @Autowired
     private ListItemEntityRepository listItemEntityRepository;
 
+    @Autowired
+    private AccountRepository accountRepository;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
 	@Test
 	public void contextLoads() {}
+
+    @Test
+    public void testPullsInDefault() {
+
+        Optional<Account> guestAccount = accountRepository
+                .findByLoginLoginIdAndLoginLoginProvider(0L, LoginProvider.ROOT);
+        assertTrue(guestAccount.isPresent());
+        guestAccount.map(guest -> {
+            try {
+                logger.info("Guest account found: \n{}", objectMapper
+                        .writer()
+                        .withDefaultPrettyPrinter().
+                        writeValueAsString(guest));
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+            return guest;
+        }).orElseThrow(AssertionError::new);
+    }
+
+    @Test
+    public void testSavesNewAccount() {
+        long n = accountRepository.count();
+        // Generate a new account
+        Account newAccount = new Account();
+        Arrays.stream(newAccount.getClass().getDeclaredFields())
+                .forEach(field ->{
+                    // not trying to generate ids
+                    if (field.getName().equals("user_id") ||
+                    Modifier.isStatic(field.getModifiers()) ||
+                    Modifier.isFinal(field.getModifiers())) {
+                        return;
+                    }
+                    field.setAccessible(true);
+                    try{
+                        if (field.getType().equals(String.class)) {
+                            field.set(newAccount, "test-string");
+                        } else if (field.getType().equals(Long.class)) {
+                            field.set(newAccount, 123456L);
+                        } else if (field.getType().equals(Timestamp.class)) {
+                            field.set(newAccount, Timestamp.valueOf(
+                                    LocalDateTime.now()));
+                        } else if (field.getType().equals(Login.class)) {
+                            Login login = new Login();
+                            login.setLoginProvider(LoginProvider.ROOT);
+                            login.setLoginId(Long.MAX_VALUE);
+                            field.set(newAccount, login);
+                        }
+                    } catch (IllegalAccessException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                });
+        // now try to save it
+        Account result = accountRepository.save(newAccount);
+        assertTrue(result != null);
+        assertEquals(result.getUsername(), newAccount.getUsername());
+        // Now we must delete it
+        accountRepository.delete(result);
+        assertEquals(accountRepository.count(), n);
+
+    }
 
     @Test
     public void testStatusEndpoint() throws Exception {
