@@ -38,6 +38,7 @@
         <dependency>
             <groupId>org.springframework.session</groupId>
             <artifactId>spring-session-jdbc</artifactId>
+            <version>3.5.3</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -257,15 +258,15 @@
                       <image>amazoncorretto:25</image>
                     </from>
                     <to>
+                        <auth>
+                            <username>${env.GITHUB_ACTOR}</username>
+                            <password>${env.GITHUB_TOKEN}</password>
+                        </auth>
                     <image>ghcr.io/mut-ink/mut-ink</image>
                       <tags>
                         <tag>${project.version}</tag>
                       </tags>
                     </to>
-                    <auth>
-                      <username>${env.GITHUB_ACTOR}</username>
-                      <password>${env.GITHUB_TOKEN}</password>
-                    </auth>
                   </configuration>
                   <goals>
                     <goal>build</goal>
