@@ -1,5 +1,6 @@
 package edu.citadel.dal;
 
+import edu.citadel.dal.model.Account;
 import edu.citadel.dal.model.ListEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -18,4 +19,5 @@ public interface ListEntityRepository extends JpaRepository<ListEntity, Long> {
             nativeQuery = true
     )
     List<ListEntity> findByOwnerUsername(@Param("username") String ownerUsername);
+    List<ListEntity> findByAccount(Account account);
 }

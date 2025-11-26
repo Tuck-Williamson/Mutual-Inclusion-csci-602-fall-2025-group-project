@@ -3,6 +3,7 @@ package edu.citadel.api;
 import edu.citadel.api.ListController.UpdateListRequest;
 import edu.citadel.api.request.ListItemRequestBody;
 import edu.citadel.api.websocket.ListUpdatePublisher;
+import edu.citadel.dal.AccountRepository;
 import edu.citadel.dal.ListEntityRepository;
 import edu.citadel.dal.ListItemEntityRepository;
 import edu.citadel.dal.model.ListEntity;
@@ -35,13 +36,15 @@ class ListControllerTest {
     @Mock
     private ListUpdatePublisher mockUpdateListRequest;
 
+    @Mock
+    private AccountRepository mockAccountRepository;
 
     private ListController instance;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        instance = new ListController(mockListEntityRepository, mockListItemEntityRepository, mockUpdateListRequest);
+        instance = new ListController(mockListEntityRepository, mockListItemEntityRepository, mockUpdateListRequest, mockAccountRepository);
     }
 
     private OAuth2User mockPrincipal(String username) {

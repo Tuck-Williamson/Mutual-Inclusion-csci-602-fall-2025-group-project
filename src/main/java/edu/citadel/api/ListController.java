@@ -3,21 +3,25 @@ package edu.citadel.api;
 import edu.citadel.api.request.CreateListRequest;
 import edu.citadel.api.request.ListItemRequestBody;
 import edu.citadel.api.websocket.ListUpdatePublisher;
+import edu.citadel.dal.AccountRepository;
 import edu.citadel.dal.ListEntityRepository;
 import edu.citadel.dal.ListItemEntityRepository;
+import edu.citadel.dal.model.Account;
 import edu.citadel.dal.model.ListEntity;
 import edu.citadel.dal.model.ListItemEntity;
+import edu.citadel.dal.model.LoginProvider;
 import lombok.Data;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 
 
 import java.time.Instant;
@@ -34,30 +38,43 @@ public class ListController {
     
     private final ListUpdatePublisher listUpdatePublisher;
 
+    private final AccountRepository accountRepository;
+
     @Autowired
     public ListController(
             final ListEntityRepository listEntityRepository,
             final ListItemEntityRepository listItemEntityRepository,
-            final ListUpdatePublisher listUpdatePublisher) {
+            final ListUpdatePublisher listUpdatePublisher,
+            final AccountRepository accountRepository) {
         this.listEntityRepository = listEntityRepository;
         this.listItemEntityRepository = listItemEntityRepository;
         this.listUpdatePublisher = listUpdatePublisher;
+        this.accountRepository = accountRepository;
+    }
+
+    private Account getCurrentAccount() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication instanceof OAuth2AuthenticationToken) {
+            String loginProviderString = ((OAuth2AuthenticationToken) authentication).getAuthorizedClientRegistrationId();
+            String loginId = ((OAuth2User) authentication.getPrincipal()).getAttribute("id").toString();
+            LoginProvider provider = LoginProvider.valueOf(loginProviderString.toUpperCase());
+            Long providerId = Long.valueOf(loginId);
+            Optional<Account> foundAccount =
+                    accountRepository.findByLoginLoginIdAndLoginLoginProvider(providerId, provider);
+            return foundAccount.orElse(
+                    accountRepository.findByLoginLoginIdAndLoginLoginProvider(0L, LoginProvider.ROOT).get()
+            );
+        }
+        return accountRepository.findByLoginLoginIdAndLoginLoginProvider(0L, LoginProvider.ROOT).get();
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<ListEntity>> getAllLists(@AuthenticationPrincipal OAuth2User principal
     ) {
-        String username = "Guest";
-
-        if (principal != null) {
-            String login = principal.getAttribute("login");
-            if (login != null && !login.isBlank()) {
-                username = login;
-            }
-        }
-
-        List<ListEntity> userLists = listEntityRepository.findByOwnerUsername(username);
-        return ResponseEntity.ok(userLists);
+        Account currentAccount = getCurrentAccount();
+        List<ListEntity> listEntities =
+                listEntityRepository.findByAccount(currentAccount);
+        return ResponseEntity.ok(listEntities);
     }
 
     @PostMapping(
@@ -68,14 +85,7 @@ public class ListController {
             @RequestBody(required = false) CreateListRequest body,
             @AuthenticationPrincipal OAuth2User principal
     ) {
-        String username = "Guest";
-
-        if (principal != null) {
-            String login = principal.getAttribute("login");
-            if (login != null && !login.isBlank()) {
-                username = login;
-            }
-        }
+        Account currentAccount = getCurrentAccount();
 
         ListEntity list = new ListEntity();
 
@@ -83,7 +93,8 @@ public class ListController {
             list.setTitle(body.getTitle());
         }
 
-        list.setOwnerUsername(username);
+        list.setOwnerUsername(currentAccount.getUsername());// TODO: clean up these references
+        list.setAccount(currentAccount);
 
         ListEntity savedList = listEntityRepository.save(list);
         listUpdatePublisher.publishListCreated(savedList);

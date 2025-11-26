@@ -33,7 +33,7 @@ public class MutInkOAuth2AccountService extends DefaultOAuth2UserService {
 
         String providerIdStr = oAuth2User.getAttribute("id").toString();
 
-        Long providerId = Long.valueOf(providerIdStr);
+        Long providerId = Long.parseLong(providerIdStr);
 
         Optional<Account> existingAccount
                 = accountRepository.findByLoginLoginIdAndLoginLoginProvider(providerId, loginProvider);

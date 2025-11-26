@@ -1,5 +1,6 @@
 package edu.citadel.dal.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -40,10 +41,11 @@ public class ListEntity {
     @OneToMany(mappedBy = "list")
     private Set<ListItemEntity> listItems = new LinkedHashSet<>();
 
-//    @Size(max = 50)
-//    @NotNull
-//    @JsonIgnore
-//    @Column(name = "OWNER_USERNAME", nullable = false, length = 50)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    @JsonBackReference
+    private Account account;
+
     @Transient
     private String ownerUsername = "Guest";
 
