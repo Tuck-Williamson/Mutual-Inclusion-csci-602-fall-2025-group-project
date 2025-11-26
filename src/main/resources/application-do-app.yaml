@@ -1,0 +1,12 @@
+############################################################
+# Digital Ocean App Platform configuration
+############################################################
+## Used to determine properties for the application
+app:
+  domain:
+    origin: https://powersofeight.com
+    frontend-origin: https://powersofeight.com
+
+## Server properties
+server:
+  forward-headers-strategy: framework
