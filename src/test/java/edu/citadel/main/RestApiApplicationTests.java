@@ -8,6 +8,8 @@ import edu.citadel.dal.ListItemEntityRepository;
 import edu.citadel.dal.model.Account;
 import edu.citadel.dal.model.Login;
 import edu.citadel.dal.model.LoginProvider;
+import edu.citadel.utils.AccountDelegate;
+import edu.citadel.utils.TestAccountDelegate;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -312,21 +314,36 @@ public class RestApiApplicationTests {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.completedOn").doesNotExist());
     }
 
+    @Autowired
+    private AccountDelegate accountDelegate;
+
     @Test
     public void testInvalidListShare() throws Exception {
         // Create a new list to then delete so that we know the list id is not valid.
+
+        TestAccountDelegate delegate = (TestAccountDelegate) accountDelegate;
+        Account guest = delegate.getCurrentAccount();
+        Account user_one = delegate.setNewCurrentAccount(1L, "one", 1L);
+        user_one = accountRepository.findById(user_one.getUser_id()).orElseThrow();
+
+        Account user_two = delegate.setNewCurrentAccount(2L, "two", 2L);
+        accountRepository.save(user_two);
+
+        delegate.setCurrentAccount(user_one);
+
         ResultActions postListResult = mockMvc
                 .perform(MockMvcRequestBuilders.post("/list")
-                        .with(oauth2Login().attributes(attrs -> attrs.put("login", "one")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"title\":\"Shared List\"}"))
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Integer listId = JsonPath.read(postListResult.andReturn().getResponse().getContentAsString(), "$.id");
 
+        delegate.setCurrentAccount(guest);
         // Try and share the list without a user.
         mockMvc.perform(MockMvcRequestBuilders.post("/list/" + listId + "/share"))
             .andExpect(MockMvcResultMatchers.status().isUnauthorized());
 
+        delegate.setCurrentAccount(user_two);
         // Try and share the list with a bad user.
         mockMvc.perform(MockMvcRequestBuilders.post("/list/" + listId + "/share")
                         .with(oauth2Login()))
@@ -334,11 +351,11 @@ public class RestApiApplicationTests {
 
 
         // Try and share the list with a non-owner user.
-        // Todo: Uncomment the following when the DB stuff for users has been added.
-//        mockMvc.perform(MockMvcRequestBuilders.post("/list/" + listId + "/share")
-//                .with(oauth2Login().attributes(attrs -> attrs.put("login", "two")))
-//        ).andExpect(MockMvcResultMatchers.status().isUnauthorized());
+        delegate.setCurrentAccount(user_two);
+        mockMvc.perform(MockMvcRequestBuilders.post("/list/" + listId + "/share"))
+                .andExpect(MockMvcResultMatchers.status().isUnauthorized());
 
+        delegate.setCurrentAccount(user_one);
         ResultActions deleteListResult = mockMvc.perform(MockMvcRequestBuilders.delete("/list/" + listId)
                         .with(oauth2Login().attributes(attrs -> attrs.put("login", "one"))))
                 .andExpect(MockMvcResultMatchers.status().isOk());
@@ -370,6 +387,7 @@ public class RestApiApplicationTests {
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Integer listId = JsonPath.read(postListResult.andReturn().getResponse().getContentAsString(), "$.id");
 
+        
         ResultActions shareListResult = mockMvc.perform(MockMvcRequestBuilders.post("/list/" + listId + "/share")
                         .with(oauth2Login().attributes(attrs -> attrs.put("login", "one"))))
                 .andExpect(MockMvcResultMatchers.status().isOk())

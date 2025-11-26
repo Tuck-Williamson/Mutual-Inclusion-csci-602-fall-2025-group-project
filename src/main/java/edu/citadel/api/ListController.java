@@ -6,10 +6,8 @@ import edu.citadel.api.websocket.ListUpdatePublisher;
 import edu.citadel.dal.AccountRepository;
 import edu.citadel.dal.ListEntityRepository;
 import edu.citadel.dal.ListItemEntityRepository;
-import edu.citadel.dal.model.Account;
-import edu.citadel.dal.model.ListEntity;
-import edu.citadel.dal.model.ListItemEntity;
-import edu.citadel.dal.model.LoginProvider;
+import edu.citadel.dal.ShareRepository;
+import edu.citadel.dal.model.*;
 import edu.citadel.utils.AccountDelegate;
 import lombok.Data;
 import lombok.Setter;
@@ -43,6 +41,10 @@ public class ListController {
     @Setter
     @Autowired
     private AccountDelegate accountDelegate;
+
+    @Setter
+    @Autowired
+    private ShareRepository shareRepository;
 
     @Autowired
     public ListController(
@@ -284,35 +286,29 @@ public class ListController {
 
     // Create a shareable token for a list
     @PostMapping(value = "/{listId}/share", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> createShare (@PathVariable Long listId, @AuthenticationPrincipal OAuth2User principal){
-        if (principal == null || principal.getAuthorities().isEmpty()) {
+    public ResponseEntity<?> createShare (@PathVariable Long listId){
+        Account current_account = getCurrentAccount();
+        if (current_account == null || current_account.getUser_id().equals(0L)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         try {
-            // Ensure we have a user ID to associate with the share
-            String userId = principal.getAttribute("login");
-            if (userId == null || userId.isBlank()) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
-
             return listEntityRepository.findById(listId)
-                    .map(listEntity -> {
+                    .map(list_entity -> {
+
+                        // Ensure that the owner of the list is the current user.
+                        if (!list_entity.getAccount().getUser_id().equals(current_account.getUser_id())) {
+                            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+                        }
+
                         // Todo: Change the default expiry time to a configurable value
-                        Instant expiryTime = Instant.now().plusSeconds(300);
+                        ShareEntity new_share = new ShareEntity();
+                        new_share.setList_id(list_entity.getId());
+                        shareRepository.save(new_share);
 
-                        // String tokenData = userId + listId.toString() + expiryTime.toString();
-                        // MessageDigest digest = MessageDigest.getInstance("SHA-256");
-                        // byte[] hash = digest.digest(tokenData.getBytes(StandardCharsets.UTF_8));
-                        // String token = HexFormat.of().formatHex(hash);
-                        // String token = UUID.randomUUID().toString();
 
-                        // For now build a token that contains the info we need to simulate the lookup.
-                        String token = "o-%s~i-%s~e-%s".formatted(userId, listId.toString(), expiryTime.toString());
-
-                        listUpdatePublisher.publishShareCreated(listEntity);
-                        // Todo: Store the token in the database once user authentication is implemented.
-                        return ResponseEntity.ok().body(Map.of("token", token, "expiryTime", expiryTime, "link", "list/accept/" + token));
+                        listUpdatePublisher.publishShareCreated(list_entity);
+                        return ResponseEntity.ok().body(Map.of("token", new_share.getShare_id(), "expiryTime", new_share.getExpiry_time(), "link", "list/accept/" + new_share.getShare_id()));
                     })
                     .orElse(ResponseEntity.notFound().build());
 
@@ -322,41 +318,44 @@ public class ListController {
     }
 
     @DeleteMapping(value = "/share/{token}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> deleteShare (@PathVariable String token, @AuthenticationPrincipal OAuth2User principal){
-        if (principal == null || principal.getAuthorities().isEmpty() || principal.getAttribute("login") == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        if (token == null || token.isBlank()) {
-            // If it's a bad request, I'm okay with it not being user-friendly.
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<?> deleteShare (@PathVariable String token){
+        Account current_account = getCurrentAccount();
+
         try{
-            String acting_user = principal.getAttribute("login");
+            return shareRepository.findById(UUID.fromString(token)).map(cur_share -> {
+                // Check if the list exists.
+                return listEntityRepository.findById(cur_share.getList_id())
+                        .map(list_entity -> {
+                            Account owner_account = list_entity.getAccount();
+                            Account shared_to = cur_share.getUser();
 
-            // Todo: replace with DB stuff once auth is worked out.
-            String[] split = token.split("~");
-            if (split.length != 3) {
-                return ResponseEntity.badRequest().build();
-            }
-            String ownerId = split[0].substring(2);
-            Long listId = Long.parseLong(split[1].substring(2));
-            Instant expiryTime = Instant.parse(split[2].substring(2));
+                            //Determine if the current user has rights to delete the share.
+                            if (list_entity.getAccount().getUser_id().equals(current_account.getUser_id())) {
+                                // List owner.
+                                if(shared_to == null) {
+                                    listUpdatePublisher.publishShareDeleted(list_entity, owner_account.getUsername(), "");
+                                }
+                                else {
+                                    listUpdatePublisher.publishShareDeleted(list_entity, owner_account.getUsername(), shared_to.getUsername());
+                                }
+                            }
+                            else if (shared_to != null && current_account.getUser_id().equals(shared_to.getUser_id())) {
+                                // User who the list was shared with.
+                                listUpdatePublisher.publishShareRejected(list_entity, owner_account.getUsername(), shared_to.getUsername());
+                            }
+                            else {
+                                // Not the owner of the list and not the user who the list was shared with.
+                                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+                            }
 
-            // Check if the list exists.
-            return listEntityRepository.findById(listId)
-                    .map(listEntity -> {
-                        //Determine if this is the user who owns the list.
-                        if (ownerId.equals(acting_user)) {
-                            // Todo: change acting_user below to reflect the user being dropped from sharing.
-                            listUpdatePublisher.publishShareDeleted(listEntity, ownerId, acting_user);
-                        }
-                        else {
-                            listUpdatePublisher.publishShareRejected(listEntity, ownerId, acting_user);
-                        }
-                        // Todo: remove share in DB.
-                        return ResponseEntity.status(HttpStatus.FOUND).build();
-                    })
+                            shareRepository.delete(cur_share);
+                            return ResponseEntity.status(HttpStatus.FOUND).build();
+                        })
+                        .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+            })
                     .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+
+
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -365,55 +364,44 @@ public class ListController {
     }
 
     // Handle accepting a share
-
     @GetMapping(value = "/accept/{token}")
-    public ResponseEntity<?> acceptShare(@PathVariable String token, @AuthenticationPrincipal OAuth2User principal) {
-        if (principal == null || principal.getAuthorities().isEmpty() || principal.getAttribute("login") == null) {
-            // This is an endpoint that should redirect to UI.
-            // Thus, we cannot simply return HttpStatus.UNAUTHORIZED.
-            return ResponseEntity.status(HttpStatus.SEE_OTHER)
-                    .header("Location", "/?error=You must be logged in to accept shared lists. Click the login button at the top right of the page.")
-                    .build();
-        }
-        if (token == null || token.isBlank()) {
-            // If it's a bad request, I'm okay with it not being user-friendly.
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<?> acceptShare(@PathVariable String token) {
+        Account current_account = getCurrentAccount();
+
         try{
-            // Todo: replace with DB stuff once auth is worked out.
-            String[] split = token.split("~");
-            if (split.length != 3) {
-                return ResponseEntity.badRequest().build();
-            }
-            String ownerId = split[0].substring(2);
-            Long listId = Long.parseLong(split[1].substring(2));
-            Instant expiryTime = Instant.parse(split[2].substring(2));
-
-            // Check if the share has expired
-            if (expiryTime.isBefore(Instant.now())) {
-                return ResponseEntity.status(HttpStatus.SEE_OTHER)
-                        .header("Location", "/?error=Share authorization has expired. Contact the owner to request a new share link.")
-                        .build();
-            }
-
-            return listEntityRepository.findById(listId)
-                    .map(listEntity -> {
-                        // Check if the owner is also the current user - like they are testing the share link.
-                        if (ownerId.equals(principal.getAttribute("login"))) {
-                            return ResponseEntity.status(HttpStatus.FOUND)
-                                    .header("Location", "/?v=" + listId + "&share=true")
+            return shareRepository.findById(UUID.fromString(token)).map(cur_share -> {
+                        // Check if the share has expired
+                        if (cur_share.getExpiry_time().toInstant().isBefore(Instant.now())) {
+                            return ResponseEntity.status(HttpStatus.SEE_OTHER)
+                                    .header("Location", "/?error=Share authorization has expired. Contact the owner to request a new share link.")
                                     .build();
                         }
 
-                        // Todo: store share in DB.
-                        listUpdatePublisher.publishShareAccepted(listEntity, ownerId, principal.getAttribute("login"));
-                        return ResponseEntity.status(HttpStatus.FOUND)
-                                .header("Location", "/?v=" + listId + "&note=You have been granted access to this shared list.")
-                                .build();
-                    })
+                        return listEntityRepository.findById(cur_share.getList_id())
+                                .map(list_entity -> {
+                                    Account owner = list_entity.getAccount();
+                                    // Check if the owner is also the current user - like they are testing the share link.
+                                    if (owner.getUser_id().equals(current_account.getUser_id())) {
+                                        return ResponseEntity.status(HttpStatus.FOUND)
+                                                .header("Location", "/?v=" + cur_share.getList_id() + "&share=true")
+                                                .build();
+                                    }
+
+                                    // Todo: store share in DB.
+                                    listUpdatePublisher.publishShareAccepted(list_entity, owner.getUsername(), current_account.getUsername());
+                                    return ResponseEntity.status(HttpStatus.FOUND)
+                                            .header("Location", "/?v=" + cur_share.getList_id() + "&note=You have been granted access to this shared list.")
+                                            .build();
+                                })
+                                .orElse(ResponseEntity.status(HttpStatus.SEE_OTHER)
+                                        .header("Location", "/?error=Shared list has been deleted.")
+                                        .build());
+            })
                     .orElse(ResponseEntity.status(HttpStatus.SEE_OTHER)
-                            .header("Location", "/?error=Shared list has been deleted.")
+                            .header("Location", "/?error=Share offer has been deleted.")
                             .build());
+
+
         }
         catch (Exception e) {
             e.printStackTrace();
