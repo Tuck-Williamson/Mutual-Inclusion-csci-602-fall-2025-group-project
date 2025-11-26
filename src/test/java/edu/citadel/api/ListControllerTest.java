@@ -8,6 +8,8 @@ import edu.citadel.dal.ListEntityRepository;
 import edu.citadel.dal.ListItemEntityRepository;
 import edu.citadel.dal.model.ListEntity;
 import edu.citadel.dal.model.ListItemEntity;
+import edu.citadel.utils.AccountDelegate;
+import edu.citadel.utils.TestAccountDelegate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -44,7 +46,8 @@ class ListControllerTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        instance = new ListController(mockListEntityRepository, mockListItemEntityRepository, mockUpdateListRequest, mockAccountRepository);
+        instance = new ListController(mockListEntityRepository, mockListItemEntityRepository, mockUpdateListRequest);
+        instance.setAccountDelegate(new TestAccountDelegate() );
     }
 
     private OAuth2User mockPrincipal(String username) {
@@ -63,7 +66,7 @@ class ListControllerTest {
                     arg.setCreatedOn(mockedTimestamp); // Set the mocked timestamp
                     return arg;
                 });
-        OAuth2User principal = mockPrincipal("testUser");
+        OAuth2User principal = mockPrincipal("Guest");
         ResponseEntity<ListEntity> response = instance.createList(null, principal);
         ListEntity result = response.getBody();
         assertNotNull(result);
@@ -74,7 +77,7 @@ class ListControllerTest {
         assertNull(result.getCompletedOn());
         assertNotNull(result.getListItems());
         assertTrue(result.getListItems().isEmpty());
-        assertEquals("testUser", result.getOwnerUsername());
+        assertEquals("Guest", result.getOwnerUsername());
     }
 
     @Test
@@ -91,7 +94,7 @@ class ListControllerTest {
 
         CreateListRequest body = new CreateListRequest();
         body.setTitle("Weekend Tasks");
-        OAuth2User principal = mockPrincipal("testUser2");
+        OAuth2User principal = mockPrincipal("Guest");
         ResponseEntity<ListEntity> response = instance.createList(body, principal);
         ListEntity result = response.getBody();
 
@@ -103,7 +106,7 @@ class ListControllerTest {
         assertNull(result.getCompletedOn());
         assertNotNull(result.getListItems());
         assertTrue(result.getListItems().isEmpty());
-        assertEquals("testUser2", result.getOwnerUsername());
+        assertEquals("Guest", result.getOwnerUsername());
     }
 
 
@@ -120,7 +123,7 @@ class ListControllerTest {
                 });
 
         CreateListRequest body = new CreateListRequest();
-        OAuth2User principal = mockPrincipal("testUser3");
+        OAuth2User principal = mockPrincipal("Guest");
         ResponseEntity<ListEntity> response = instance.createList(body, principal);
         ListEntity result = response.getBody();
 
@@ -132,7 +135,7 @@ class ListControllerTest {
         assertNull(result.getCompletedOn());
         assertNotNull(result.getListItems());
         assertTrue(result.getListItems().isEmpty());
-        assertEquals("testUser3", result.getOwnerUsername());
+        assertEquals("Guest", result.getOwnerUsername());
     }
 
 
@@ -150,7 +153,7 @@ class ListControllerTest {
 
         CreateListRequest body = new CreateListRequest();
         body.setTitle("   ");
-        OAuth2User principal = mockPrincipal("testUser4");
+        OAuth2User principal = mockPrincipal("Guest");
         ResponseEntity<ListEntity> response = instance.createList(body, principal);
         ListEntity result = response.getBody();
 
@@ -162,7 +165,7 @@ class ListControllerTest {
         assertNull(result.getCompletedOn());
         assertNotNull(result.getListItems());
         assertTrue(result.getListItems().isEmpty());
-        assertEquals("testUser4", result.getOwnerUsername());
+        assertEquals("Guest", result.getOwnerUsername());
     }
 
 

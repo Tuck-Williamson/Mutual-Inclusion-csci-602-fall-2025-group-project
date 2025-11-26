@@ -10,7 +10,9 @@ import edu.citadel.dal.model.Account;
 import edu.citadel.dal.model.ListEntity;
 import edu.citadel.dal.model.ListItemEntity;
 import edu.citadel.dal.model.LoginProvider;
+import edu.citadel.utils.AccountDelegate;
 import lombok.Data;
+import lombok.Setter;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -38,35 +40,24 @@ public class ListController {
     
     private final ListUpdatePublisher listUpdatePublisher;
 
-    private final AccountRepository accountRepository;
+    @Setter
+    @Autowired
+    private AccountDelegate accountDelegate;
 
     @Autowired
     public ListController(
             final ListEntityRepository listEntityRepository,
             final ListItemEntityRepository listItemEntityRepository,
-            final ListUpdatePublisher listUpdatePublisher,
-            final AccountRepository accountRepository) {
+            final ListUpdatePublisher listUpdatePublisher) {
         this.listEntityRepository = listEntityRepository;
         this.listItemEntityRepository = listItemEntityRepository;
         this.listUpdatePublisher = listUpdatePublisher;
-        this.accountRepository = accountRepository;
     }
 
     private Account getCurrentAccount() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication instanceof OAuth2AuthenticationToken) {
-            String loginProviderString = ((OAuth2AuthenticationToken) authentication).getAuthorizedClientRegistrationId();
-            String loginId = ((OAuth2User) authentication.getPrincipal()).getAttribute("id").toString();
-            LoginProvider provider = LoginProvider.valueOf(loginProviderString.toUpperCase());
-            Long providerId = Long.valueOf(loginId);
-            Optional<Account> foundAccount =
-                    accountRepository.findByLoginLoginIdAndLoginLoginProvider(providerId, provider);
-            return foundAccount.orElse(
-                    accountRepository.findByLoginLoginIdAndLoginLoginProvider(0L, LoginProvider.ROOT).get()
-            );
-        }
-        return accountRepository.findByLoginLoginIdAndLoginLoginProvider(0L, LoginProvider.ROOT).get();
+        return accountDelegate.getCurrentAccount();
     }
+
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<ListEntity>> getAllLists(@AuthenticationPrincipal OAuth2User principal
