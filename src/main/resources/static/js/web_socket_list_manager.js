@@ -7,6 +7,9 @@
  *   // Later: unsubscribe();
  */
 
+import {showNotification} from "./notification_banner.js";
+
+
 let stompClient = null;
 const subscriptions = {};
 
@@ -30,6 +33,7 @@ export function initWebSocket() {
                 resolve();
             },
             (error) => {
+                showNotification("Connection Error: Please refresh the page.");
                 console.error('Connection error:', error);
                 reject(error);
             }
@@ -47,6 +51,7 @@ export function subscribeToList(listId, callback) {
     if (!isConnected()) {
         console.error('WebSocket not connected. Call initWebSocket() first.');
         // TODO: Maybe do better error handling here? Throw an error?
+        showNotification("Error: WebSocket not connected. Developer error!!! Danger Will Robinson!!1111one.");
         return () => {};
     }
 

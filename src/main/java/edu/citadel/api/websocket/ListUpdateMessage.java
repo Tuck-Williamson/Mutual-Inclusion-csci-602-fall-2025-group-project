@@ -33,6 +33,12 @@ public class ListUpdateMessage {
     @JsonProperty("timestamp")
     private Long timestamp;
 
+    @JsonProperty("owner_user_id")
+    private String ownerUserId;
+
+    @JsonProperty("recipient_user_id")
+    private String recipientUserId;
+
     /**
      * Create an update message from a ListEntity
      */
@@ -43,6 +49,8 @@ public class ListUpdateMessage {
                 .title(entity.getTitle())
                 .completedOn(entity.getCompletedOn())
                 .timestamp(System.currentTimeMillis())
+                .ownerUserId(null)
+                .recipientUserId(null)
                 .build();
     }
 }

@@ -1,5 +1,6 @@
 package edu.citadel.dal.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -7,6 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -39,5 +41,12 @@ public class ListEntity {
     @OneToMany(mappedBy = "list")
     private Set<ListItemEntity> listItems = new LinkedHashSet<>();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    @JsonBackReference
+    private Account account;
+
+    @Transient
+    private String ownerUsername = "Guest";
 
 }

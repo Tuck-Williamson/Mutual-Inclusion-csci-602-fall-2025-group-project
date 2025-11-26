@@ -32,7 +32,9 @@
             "list-detail": "/js/list_detail.js",
             "modal": "/js/modal.js",
             "websocket": "/js/web_socket_list_manager.js",
-            "user-pill": "/js/user_pill.js"
+            "user-pill": "/js/user_pill.js",
+            "notification_banner": "/js/notification_banner.js",
+            "sharing": "/js/sharing.js"
           }
         }
     </script>
@@ -48,23 +50,40 @@
 <body class="min-h-screen bg-gradient-to-br from-indigo-400 to-purple-600 text-gray-900">
 
 
-<div id="app" class="w-full"></div>
+<div id="banner-root" class="w-full"></div>
+<div id="app" class="w-full">
+</div>
 
 <!--WebSocket init script-->
 <script type="module">
     import { initWebSocket } from "websocket";
+    import { showNotification } from "notification_banner";
 
-    // TODO Error UI
+    const {h, render} = preact;
+    const html = htm.bind(h);
+
     initWebSocket()
         .then(console.log("WebSocket connected successfully!"))
-        .catch(err => console.error("Failed to connect to WebSocket:", err));
+        .catch(err => {
+            console.error("Failed to connect to WebSocket:", err);
+            // render(
+            //     html`
+            //         <${Notification}
+            //                 message="Problem connecting to the server. Please refresh the page after some time or try again later."
+            //                 type="error"
+            //         />`,
+            //     document.body
+            // );
+            showNotification("Problem connecting to the server. Please refresh the page after some time or try again later.");
+        });
 
 </script>
 
 <!-- APP SCRIPT -->
 <script type="module">
+
     const { h, render } = preact;
-    const { useState } = preactHooks;
+    const {useState, useEffect} = preactHooks;
 
     const html = htm.bind(h);
 
@@ -72,10 +91,19 @@
     import AccountPage from "account";
     import ListDetailPage from "list-detail";
     import UserPill from "user-pill";
+    import {showNotification} from "notification_banner";
+    import {ShareList} from "sharing";
+
+
+    const getQueryParams = () => {
+        const params = new URLSearchParams(window.location.search);
+        return Object.fromEntries(params.entries());
+    };
 
     const App = () => {
         const [page, setPage] = useState("lists");
         const [currentList, setCurrentList] = useState(null);
+        const {error, note, v, share} = getQueryParams();
 
         // FIXED NAVIGATION (unwrap wrapped list object)
         const navigate = (p, data = null) => {
@@ -85,6 +113,10 @@
                 setCurrentList(data);
             }
             setPage(p);
+            let validPages = ["lists", "account", "list-detail", "share"];
+
+            const state = {page: validPages.includes(p) ? p : "lists", list: data};
+            window.history.pushState(state, '', window.location.pathname + '?p=' + p + (data?.list ? `&v=${data.list.id}` : ''));
         };
 
         let content;
@@ -94,9 +126,45 @@
         if (page === "account") {
             content = html`<${AccountPage} navigate=${navigate} />`;
         }
+        if (page === "share" && currentList) {
+            content = html`<${ShareList} list=${currentList} navigate=${navigate} />`;
+        }
         if (page === "list-detail" && currentList) {
             content = html`<${ListDetailPage} list=${currentList} navigate=${navigate} />`;
         }
+
+
+        useEffect(() => {
+            async function fetchListForPage(listId, page = "share") {
+                const response = await fetch(`/list/${listId}`);
+                if (!response.ok) {
+                    showNotification("Error fetching list: " + response.statusText);
+                    return;
+                }
+                const list = await response.json();
+                navigate(page, {list: list});
+            }
+
+            if (share && v) {
+                // Todo show share page.
+                fetchListForPage(v, "share");
+            } else if (v) {
+                // Todo show list page.
+                fetchListForPage(v, "list-detail");
+            }
+
+            window.onpopstate = (event) => {
+                if (event.state?.page && event.state?.list) {
+                    navigate(event.state.page, event.state.list);
+                } else {
+                    navigate("lists");
+                }
+            };
+
+            // This is needed to remove the query params from the URL after navigation.
+            // Otherwise, the user will continue to get redirected to the same page with the params.
+            window.history.pushState({}, '', window.location.pathname);
+        }, []);
 
         return html`
             <div class="fixed top-4 right-4 z-50">
@@ -106,10 +174,13 @@
                         mt-16 p-6 sm:p-8 lg:p-12">
                 ${content}
             </div>
+            ${error && showNotification(error) && window.history.pushState({}, '', window.location.pathname)}
+            ${note && showNotification(note, "notification") && window.history.pushState({}, '', window.location.pathname)}
         `;
     };
 
     render(html`<${App} />`, document.getElementById("app"));
+    
 </script>
 
 </body>

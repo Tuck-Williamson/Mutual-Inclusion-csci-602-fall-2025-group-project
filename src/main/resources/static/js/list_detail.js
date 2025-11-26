@@ -113,10 +113,16 @@ const ListDetailPage = ({ list, navigate }) => {
         <div class="space-y-8">
 
             <header class="flex items-center justify-between pb-2 border-b border-gray-200">
+                <button class="w-8 h-8 rounded-md bg-blue-500 text-white shadow hover:bg-blue-600"
+                        onClick=${e => {e.stopPropagation(); navigate("share", list); }}>
+                    <i class="fa-solid fa-share-nodes"></i>
+                </button>
+                
                 <h1 id="ListTitle" class="font-bold text-gray-900 text-2xl sm:text-3xl lg:text-4xl xl:text-5xl">
                     ${list.title || "Untitled List"}
+                    
                 </h1>
-
+                
                 <button class="text-blue-600 hover:text-blue-800
                                text-sm sm:text-base lg:text-lg xl:text-xl"
                         onClick=${() => navigate("lists")}>
