@@ -449,7 +449,7 @@ public class RestApiApplicationTests {
 
         delegate.setCurrentAccount(user_one);
         mockMvc.perform(MockMvcRequestBuilders.delete("/list/share/" + token))
-                .andExpect(MockMvcResultMatchers.status().isFound());
+                .andExpect(MockMvcResultMatchers.status().isNoContent());
 
         // Now check and make sure that the share can be rejected.
         shareListResult = mockMvc.perform(MockMvcRequestBuilders.post("/list/" + listId + "/share"))
@@ -468,7 +468,7 @@ public class RestApiApplicationTests {
 
         // test deleting the share with the non-owner.
         mockMvc.perform(MockMvcRequestBuilders.delete("/list/share/" + token))
-                .andExpect(MockMvcResultMatchers.status().isFound());
+                .andExpect(MockMvcResultMatchers.status().isNoContent());
     }
 
 }

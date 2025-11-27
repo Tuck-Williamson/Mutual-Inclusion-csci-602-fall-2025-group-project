@@ -46,8 +46,7 @@ public class ListEntity {
     @JsonBackReference
     private Account account;
 
-    @OneToMany(mappedBy = "list_id", fetch = FetchType.EAGER)
-    @JsonBackReference
+    @OneToMany(mappedBy = "list_id")
     private Set<ShareEntity> shares = new LinkedHashSet<>();
 
 

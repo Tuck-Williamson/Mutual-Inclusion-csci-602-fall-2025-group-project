@@ -3,7 +3,6 @@ package edu.citadel.api;
 import edu.citadel.api.request.CreateListRequest;
 import edu.citadel.api.request.ListItemRequestBody;
 import edu.citadel.api.websocket.ListUpdatePublisher;
-import edu.citadel.dal.AccountRepository;
 import edu.citadel.dal.ListEntityRepository;
 import edu.citadel.dal.ListItemEntityRepository;
 import edu.citadel.dal.ShareRepository;
@@ -14,10 +13,7 @@ import lombok.Setter;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -27,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.time.Instant;
 import java.util.*;
 import java.time.LocalDateTime;
+import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/list")
@@ -106,7 +103,22 @@ public class ListController {
     public ResponseEntity<ListEntity> viewList(@PathVariable Long listId) {
         try {
             return listEntityRepository.findById(listId)
-                    .map(ResponseEntity::ok)
+                    .map(listEntity -> {
+                        Set<ShareEntity> shares = listEntity.getShares();
+                        Set<ShareEntity> shares_uname = new HashSet<>();
+                        for (ShareEntity share : shares) {
+                            if (share.getUser() == null) {
+                                share.setUsername(null);
+                                shares_uname.add(share);
+                            }
+                            else {
+                                share.setUsername(share.getUser().getUsername());
+                                shares_uname.add(share);
+                            }
+                        }
+                        listEntity.setShares(shares_uname);
+                        return ResponseEntity.ok(listEntity);
+                    })
                     .orElse(ResponseEntity.notFound().build());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -304,11 +316,10 @@ public class ListController {
                         // Todo: Change the default expiry time to a configurable value
                         ShareEntity new_share = new ShareEntity();
                         new_share.setList_id(list_entity.getId());
-                        shareRepository.save(new_share);
-
+                        new_share = shareRepository.save(new_share);
 
                         listUpdatePublisher.publishShareCreated(list_entity);
-                        return ResponseEntity.ok().body(Map.of("token", new_share.getShare_id(), "expiryTime", new_share.getExpiry_time(), "link", "list/accept/" + new_share.getShare_id()));
+                        return ResponseEntity.ok().body(Map.of("token", new_share.getShare_id(), "expiryTime", new_share.getExpiry_time(), "link", "list/accept/" + new_share.getShare_id(), "share", new_share));
                     })
                     .orElse(ResponseEntity.notFound().build());
 
@@ -349,7 +360,7 @@ public class ListController {
                             }
 
                             shareRepository.delete(cur_share);
-                            return ResponseEntity.status(HttpStatus.FOUND).build();
+                            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
                         })
                         .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
             })

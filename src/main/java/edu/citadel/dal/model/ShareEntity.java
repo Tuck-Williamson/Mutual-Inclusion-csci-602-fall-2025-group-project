@@ -32,6 +32,9 @@ public class ShareEntity {
     @JsonBackReference
     private Account user;
 
+    @Transient
+    private String username = null;
+
     @NotNull
     @Column(name = "expiry_time", nullable = false)
     private Timestamp expiry_time;
