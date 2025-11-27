@@ -53,9 +53,3 @@ springdoc:
   packagesToScan: edu.citadel.api
   pathsToMatch: /v1, /**
   show-actuator: true
----
-spring:
-  session:
-    jdbc:
-      initialize-schema: embedded
-    store-type: jdbc
