@@ -9,6 +9,7 @@ const html = htm.bind(h);
 
 const ListDetailPage = ({ list, navigate }) => {
     const [items, setItems] = useState([]);
+    const [shares, setShares] = useState([]);
     const [newItemName, setNewItemName] = useState("");
     const [editingItemId, setEditingItemId] = useState(null);
     const [editingItemName, setEditingItemName] = useState("");
@@ -17,7 +18,11 @@ const ListDetailPage = ({ list, navigate }) => {
     const fetchItems = () => {
         fetch(`/list/${list.id}`)
             .then(res => res.json())
-            .then(data => setItems(data.listItems || []));
+            .then(data => {
+                setItems(data.listItems || []);
+                setShares(data.shares || []);
+                console.log(data);
+            });
     };
 
     useEffect(fetchItems, [list.id]);
@@ -113,11 +118,19 @@ const ListDetailPage = ({ list, navigate }) => {
         <div class="space-y-8">
 
             <header class="flex items-center justify-between pb-2 border-b border-gray-200">
-                <button class="w-8 h-8 rounded-md bg-blue-500 text-white shadow hover:bg-blue-600"
-                        onClick=${e => {e.stopPropagation(); navigate("share", list); }}>
-                    <i class="fa-solid fa-share-nodes"></i>
-                </button>
                 
+                <span id="share-tag">
+                    <button class="w-8 h-8 rounded-md bg-blue-500 text-white shadow hover:bg-blue-600"
+                            onClick=${e => {e.stopPropagation(); navigate("share", list); }}>
+                        <i class="fa-solid fa-share-nodes"></i>
+                    </button>
+                    ${shares.length ? html`
+                    <span class="text-gray-400 text-sm sm:text-base lg:text-lg xl:text-xl">
+                        (${shares.length} ${shares.length === 1 ? "share" : "shares"})
+                    </span>
+                    ` : html``}
+                </span>
+
                 <h1 id="ListTitle" class="font-bold text-gray-900 text-2xl sm:text-3xl lg:text-4xl xl:text-5xl">
                     ${list.title || "Untitled List"}
                     

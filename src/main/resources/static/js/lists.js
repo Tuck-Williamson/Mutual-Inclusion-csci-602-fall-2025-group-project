@@ -19,7 +19,10 @@ const ListsPage = ({ navigate }) => {
     const fetchLists = () => {
         fetch("/list")
             .then(res => res.json())
-            .then(data => setLists(data || []));
+            .then(data => {
+                setLists(data || []);
+                // console.log(data);
+            });
     };
 
     useEffect(fetchLists, []);
