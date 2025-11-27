@@ -377,6 +377,13 @@ public class ListController {
                                     .build();
                         }
 
+                        //No reusing the same share link twice.
+                        if (cur_share.getUser() != null) {
+                            return ResponseEntity.status(HttpStatus.SEE_OTHER)
+                                    .header("Location", "/?error=Share authorization has already been accepted.")
+                                    .build();
+                        }
+
                         return listEntityRepository.findById(cur_share.getList_id())
                                 .map(list_entity -> {
                                     Account owner = list_entity.getAccount();
@@ -387,7 +394,8 @@ public class ListController {
                                                 .build();
                                     }
 
-                                    // Todo: store share in DB.
+                                    cur_share.setUser(current_account);
+                                    shareRepository.save(cur_share);
                                     listUpdatePublisher.publishShareAccepted(list_entity, owner.getUsername(), current_account.getUsername());
                                     return ResponseEntity.status(HttpStatus.FOUND)
                                             .header("Location", "/?v=" + cur_share.getList_id() + "&note=You have been granted access to this shared list.")

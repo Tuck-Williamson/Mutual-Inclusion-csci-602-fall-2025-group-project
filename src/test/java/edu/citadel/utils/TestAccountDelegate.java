@@ -34,20 +34,6 @@ public class TestAccountDelegate implements AccountDelegate {
         this.currentAccount.setLast_login(Timestamp.valueOf(LocalDateTime.now()));
     }
 
-    public Account setNewCurrentAccount(Long id, String username, Long login_id) {
-        this.currentAccount = new Account();
-        this.currentAccount.setUser_id(id);
-        this.currentAccount.setUsername(username);
-        Login login = new Login();
-        login.setLoginId(login_id);
-        login.setLoginProvider(LoginProvider.ROOT);
-        this.currentAccount.setLogin(login);
-        this.currentAccount.setCreated_on(Timestamp.valueOf(LocalDateTime.now()));
-        this.currentAccount.setLast_login(Timestamp.valueOf(LocalDateTime.now()));
-        accountRepository.save(this.currentAccount);
-        return this.currentAccount;
-    }
-
     @Override
     public Account getCurrentAccount() {
         return currentAccount;

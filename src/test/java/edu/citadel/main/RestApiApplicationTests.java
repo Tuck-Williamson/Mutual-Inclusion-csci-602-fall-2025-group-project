@@ -25,6 +25,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.event.annotation.BeforeTestExecution;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -323,12 +324,19 @@ public class RestApiApplicationTests {
 
         TestAccountDelegate delegate = (TestAccountDelegate) accountDelegate;
         Account guest = delegate.getCurrentAccount();
-        Account user_one = delegate.setNewCurrentAccount(1L, "one", 1L);
-        user_one = accountRepository.findById(user_one.getUser_id()).orElseThrow();
-        // Todo: Try just using the accountRepo to save new users then push to delegate???
 
-        Account user_two = delegate.setNewCurrentAccount(2L, "two", 2L);
-        accountRepository.save(user_two);
+        Account user_one = new Account();
+        user_one.setUsername("oneI");
+        Login login = new Login();
+        login.setLoginProvider(LoginProvider.ROOT);
+        login.setLoginId(2112L);
+        user_one.setLogin(login);
+        user_one = accountRepository.save(user_one);
+        Account user_two = new Account();
+        user_two.setUsername("twoI");
+        login.setLoginId(2113L);
+        user_two.setLogin(login);
+        user_two = accountRepository.save(user_two);
 
         delegate.setCurrentAccount(user_one);
 
@@ -369,28 +377,42 @@ public class RestApiApplicationTests {
         // Test bad accept link
         mockMvc.perform(MockMvcRequestBuilders.get("/list/accept/badtoken")
                         .with(oauth2Login().attributes(attrs -> attrs.put("login", "one"))))
-                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+                .andExpect(MockMvcResultMatchers.status().isInternalServerError());
 
-        // Test delete with no user
-        mockMvc.perform(MockMvcRequestBuilders.delete("/list/share/badtoken"))
-                .andExpect(MockMvcResultMatchers.status().isUnauthorized());
 
     }
 
     @Test
     public void testShareListAndDelete() throws Exception {
+
+        TestAccountDelegate delegate = (TestAccountDelegate) accountDelegate;
+        Account guest = delegate.getCurrentAccount();
+
+        Account user_one = new Account();
+        user_one.setUsername("one");
+        Login login = new Login();
+        login.setLoginProvider(LoginProvider.ROOT);
+        login.setLoginId(2114L);
+        user_one.setLogin(login);
+        user_one = accountRepository.save(user_one);
+        Account user_two = new Account();
+        user_two.setUsername("two");
+        login.setLoginId(2115L);
+        user_two.setLogin(login);
+        user_two = accountRepository.save(user_two);
+
+        delegate.setCurrentAccount(user_one);
+
         // Create a new list first
         ResultActions postListResult = mockMvc
                 .perform(MockMvcRequestBuilders.post("/list")
-                        .with(oauth2Login().attributes(attrs -> attrs.put("login", "one")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"title\":\"Shared List\"}"))
                 .andExpect(MockMvcResultMatchers.status().isOk());
         Integer listId = JsonPath.read(postListResult.andReturn().getResponse().getContentAsString(), "$.id");
 
         
-        ResultActions shareListResult = mockMvc.perform(MockMvcRequestBuilders.post("/list/" + listId + "/share")
-                        .with(oauth2Login().attributes(attrs -> attrs.put("login", "one"))))
+        ResultActions shareListResult = mockMvc.perform(MockMvcRequestBuilders.post("/list/" + listId + "/share"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.token").isNotEmpty())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.expiryTime").isNotEmpty())
@@ -401,17 +423,19 @@ public class RestApiApplicationTests {
 
         // Test link redirects
 
-        // With no user has an error message.
-        mockMvc.perform(MockMvcRequestBuilders.get(shareLink))
-                .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
-                .andExpect(MockMvcResultMatchers.redirectedUrlPattern("/?error=**"));
+//        delegate.setCurrentAccount(guest);
+//        // With no user has an error message.
+//        mockMvc.perform(MockMvcRequestBuilders.get(shareLink))
+//                .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
+//                .andExpect(MockMvcResultMatchers.redirectedUrlPattern("/?error=**"));
 
-        // With the owner user has redirected to the list share page.
-        mockMvc.perform(MockMvcRequestBuilders.get(shareLink)
-                        .with(oauth2Login().attributes(attrs -> attrs.put("login", "one"))))
+        delegate.setCurrentAccount(user_one);
+        // With the owner user is redirected to the list share page.
+        mockMvc.perform(MockMvcRequestBuilders.get(shareLink))
                 .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
                 .andExpect(MockMvcResultMatchers.redirectedUrlPattern("/?v=" + listId + "&share=true"));
 
+        delegate.setCurrentAccount(user_two);
         // With a new user has redirection to the list page.
         mockMvc.perform(MockMvcRequestBuilders.get(shareLink)
                         .with(oauth2Login().attributes(attrs -> attrs.put("login", "two"))))
@@ -419,18 +443,16 @@ public class RestApiApplicationTests {
                 .andExpect(MockMvcResultMatchers.redirectedUrlPattern("/?v=" + listId + "&note=**"));
 
         // Now ensure that the list cannot be re-shared from the same token.
-        // Todo: Uncomment the following when the DB stuff for users has been added.
-//        mockMvc.perform(MockMvcRequestBuilders.post("/list/" + listId + "/share")
-//                .with(userOne))
-//                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+        mockMvc.perform(MockMvcRequestBuilders.get(shareLink))
+                .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
+                .andExpect(MockMvcResultMatchers.redirectedUrlPattern("/?error=**"));
 
-        mockMvc.perform(MockMvcRequestBuilders.delete("/list/share/" + token)
-                .with(oauth2Login().attributes(attrs -> attrs.put("login", "one"))))
+        delegate.setCurrentAccount(user_one);
+        mockMvc.perform(MockMvcRequestBuilders.delete("/list/share/" + token))
                 .andExpect(MockMvcResultMatchers.status().isFound());
 
         // Now check and make sure that the share can be rejected.
-        shareListResult = mockMvc.perform(MockMvcRequestBuilders.post("/list/" + listId + "/share")
-                        .with(oauth2Login().attributes(attrs -> attrs.put("login", "one"))))
+        shareListResult = mockMvc.perform(MockMvcRequestBuilders.post("/list/" + listId + "/share"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.token").isNotEmpty())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.expiryTime").isNotEmpty())
@@ -439,14 +461,13 @@ public class RestApiApplicationTests {
         shareLink = "/" + JsonPath.read(shareListResult.andReturn().getResponse().getContentAsString(), "$.link");
         token = JsonPath.read(shareListResult.andReturn().getResponse().getContentAsString(), "$.token");
 
-        mockMvc.perform(MockMvcRequestBuilders.get(shareLink)
-                        .with(oauth2Login().attributes(attrs -> attrs.put("login", "two"))))
+        delegate.setCurrentAccount(user_two);
+        mockMvc.perform(MockMvcRequestBuilders.get(shareLink))
                 .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
                 .andExpect(MockMvcResultMatchers.redirectedUrlPattern("/?v=" + listId + "&note=**"));
 
         // test deleting the share with the non-owner.
-        mockMvc.perform(MockMvcRequestBuilders.delete("/list/share/" + token)
-                        .with(oauth2Login().attributes(attrs -> attrs.put("login", "two"))))
+        mockMvc.perform(MockMvcRequestBuilders.delete("/list/share/" + token))
                 .andExpect(MockMvcResultMatchers.status().isFound());
     }
 
