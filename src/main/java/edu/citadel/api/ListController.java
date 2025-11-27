@@ -100,10 +100,14 @@ public class ListController {
             value = "/{listId}",
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<ListEntity> viewList(@PathVariable Long listId) {
+    public ResponseEntity<?> viewList(@PathVariable Long listId) {
+        Account currentAccount = getCurrentAccount();
         try {
             return listEntityRepository.findById(listId)
                     .map(listEntity -> {
+                        boolean allowed = listEntity.getAccount().getUser_id().equals(currentAccount.getUser_id());
+
+                        // Loads usernames for shares so that we don't need to expose all user information.
                         Set<ShareEntity> shares = listEntity.getShares();
                         Set<ShareEntity> shares_uname = new HashSet<>();
                         for (ShareEntity share : shares) {
@@ -114,9 +118,14 @@ public class ListController {
                             else {
                                 share.setUsername(share.getUser().getUsername());
                                 shares_uname.add(share);
+                                allowed = allowed || share.getUser().getUser_id().equals(currentAccount.getUser_id());
                             }
                         }
                         listEntity.setShares(shares_uname);
+
+                        if (!allowed) {
+                            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+                        }
                         return ResponseEntity.ok(listEntity);
                     })
                     .orElse(ResponseEntity.notFound().build());
@@ -175,9 +184,10 @@ public class ListController {
 
 
     @DeleteMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ListEntity> deleteList(@PathVariable Long id) {
+    public ResponseEntity<?> deleteList(@PathVariable Long id) {
         return listEntityRepository.findById(id).map(list -> {
             Hibernate.initialize(list.getListItems()); // initialize the list
+            Hibernate.initialize(list.getShares()); // initialize the list
             listEntityRepository.delete(list);
             listUpdatePublisher.publishListDeleted(list);
             return ResponseEntity.ok(list);

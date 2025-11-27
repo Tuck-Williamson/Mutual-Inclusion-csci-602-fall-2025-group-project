@@ -179,10 +179,9 @@ public class RestApiApplicationTests {
                 .getResponse()
                 .getContentAsString();
 
+        logger.info("Delete Exist create Response: {}", response);
         // Extract the list ID from the response. No need to parse JSON, just grab from the JSON string directly.
-        int startIndex = response.indexOf("\"id\":") + 5;
-        int endIndex = response.indexOf(",", startIndex);
-        String listId = response.substring(startIndex, endIndex);
+        Integer listId = JsonPath.read(response, "$.id");
 
         // TODO: Once we can set list properties in the post endpoint, test properties of the returned object.
         mockMvc.perform(MockMvcRequestBuilders.delete("/list/" + listId))
@@ -365,8 +364,7 @@ public class RestApiApplicationTests {
                 .andExpect(MockMvcResultMatchers.status().isUnauthorized());
 
         delegate.setCurrentAccount(user_one);
-        ResultActions deleteListResult = mockMvc.perform(MockMvcRequestBuilders.delete("/list/" + listId)
-                        .with(oauth2Login().attributes(attrs -> attrs.put("login", "one"))))
+        ResultActions deleteListResult = mockMvc.perform(MockMvcRequestBuilders.delete("/list/" + listId))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
         // Now try and share the deleted list
