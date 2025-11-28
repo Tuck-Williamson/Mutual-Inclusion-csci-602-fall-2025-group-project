@@ -272,7 +272,7 @@ export const ShareList = ({ navigate, list, from /*, onShareAdded*/ }) => {
                             </div>
 
                             <p class="text-xs text-gray-500 mb-3">
-                                Share link expires in 5 minutes
+                                Share link expires in 10 minutes from when first created.
                             </p>
                         
                         <button
